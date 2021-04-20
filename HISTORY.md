@@ -1,6 +1,6 @@
 # MITEN PROJEKTI TOTEUTETTIIN???
 
-## tehdään kansiosta gir-repositorio
+## tehdään kansiosta git-repositorio
     git init
 ## ja lisätään .gitignore
 
@@ -34,13 +34,28 @@
 ## luodaan index.ts-tiedosto
 
 ## installoidaan testejä varten
-npm install jest
-npm install supertest
-npm install ts-jest
-npm install @types/jest
-npm install @types/supertest
+    npm install jest
+    npm install supertest
+    npm install ts-jest
+    npm install @types/jest
+    npm install @types/supertest
 ## lisätään testien käynnistämiseksi scripti
 
+## installoidaan graphql
+    npm install graphql --save
+     npm install @types/graphql --save
 
+## Mitä?
+    Nyt käytetään apollo-server-instanssia middlewarena Expressille.
+    Näin voidaan tarjota serveriltä sekä  REST että GraphQL-kutsuja, 
+    mikä on hyvä, kun halutaan ehkä serverille salasanan asetus,
+    joka ei tapahdu GraphQL:n kautta.
+    Huonona puolena on se, että apollo-server-express on hitaampi. 
+    Tässä se ei nyt haittaa.
 
-
+## Kyselyt:
+    Kyselyt voidaan lähettää Playgroundin avulla: http://localhost:4000/graphql.
+    Kaikki graphql-kyselyt lähetetään yo. osoitteeseen.
+    Voidaan myös lähettää "tavallinen" kysely "http://localhost:4000/health"
+    ja vastaukseksi pitäisi saada "OK" (tämä route ei siis ole graphql-route 
+    vaan tavallinen Express-route).
