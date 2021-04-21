@@ -59,3 +59,18 @@
     Voidaan myös lähettää "tavallinen" kysely "http://localhost:4000/health"
     ja vastaukseksi pitäisi saada "OK" (tämä route ei siis ole graphql-route 
     vaan tavallinen Express-route).
+
+## GitHub:
+    Luodaan uusi repositorio GitHubiin, ja tehdään siitä etärepositorio.
+        git remote add origin git@github.com:satuhyva/swaplings_server.git
+    Lähetetään repositorio GitHubiin:
+        git push -u origin master
+    
+## Luotiin uusi Heroku app:
+    heroku create swaplings
+
+## GitHub actions:
+    Luodaan pipeline.yml-tiedosto, jonka avulla deployment Herokuun.
+    Heroku Account settingsistä saadaan Heroku API KEY.
+    Tämä annetaan GitHub secret'inä. Samoin APP NAME JA HEROKU EMAIL.
+    Lisätään Procfile, jotta Heroku osaa käynnistyä.
