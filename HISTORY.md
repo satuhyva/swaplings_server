@@ -90,4 +90,15 @@
 ## Aloitetaan luomaan testejä:
     Luodaan jest.confing.ts.
     Sijoitetaan kaikki testit src/tests-kansioon.
-    
+
+## MongoDB
+    Käytiin päivittämässä MongoDB Atlas-palveluun tiedot.
+    Otettiin sieltä "URL".
+    Sijoitettiin siihen tiedot (ja luotiin erilliset URL:t tavallisen tilan ja testauksen DB:ille).
+
+## Installoidaan mongoose
+    npm install mongoose --save
+    npm install --save-dev @types/mongoose
+
+## Muodostetaan yhteys MongoDB:hen
+    Laitetaan tämä tapahtumaan ennen serverin muuta käynnistymistä index.js:ssä.

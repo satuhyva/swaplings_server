@@ -5,9 +5,9 @@ import { performTestServerQuery } from './helpers'
 
 
 
-describe('SERVER BASIC TESTS', () => {
+describe('SERVER', () => {
 
-    test('Server can be started and a REST GET request to /health results in an "OK" response', async () => {
+    test('can be started and a REST GET request to "/health" results in an "OK" response', async () => {
         const response = await testServer
             .get('/health')
             .send()
@@ -15,7 +15,7 @@ describe('SERVER BASIC TESTS', () => {
         expect(response.text).toBe('OK')
     })
 
-    test('Server can be started and a GraphQL QUERY health results in an "OK" response', async () => {
+    test('can be started and a GraphQL QUERY "health" results in an "OK" response', async () => {
         const query = `
                 query {
                     health

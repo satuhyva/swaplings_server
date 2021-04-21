@@ -27,7 +27,6 @@ separateSchemas.forEach(schema => {
     typeDefsCombined = [...typeDefsCombined, schema.typeDefs]
 
     for (const [key, value] of Object.entries(schema.resolvers.Query)) {
-        console.log(key, value)
         if (key in combinedQueries) {
             throw new Error(`Query ${key} already exists!`)
         } else {

@@ -3,8 +3,8 @@ import { ApolloServer } from 'apollo-server-express'
 import typeDefsAndResolversCombined from './graphql-schema/typeDefsAndResolversCombined'
 
 
-const app = express()
 
+const app = express()
 app.get('/health', (_request, response) => {
     response.send('OK')
 })
