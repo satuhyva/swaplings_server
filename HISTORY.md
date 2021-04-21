@@ -74,3 +74,8 @@
     Heroku Account settingsistä saadaan Heroku API KEY.
     Tämä annetaan GitHub secret'inä. Samoin APP NAME JA HEROKU EMAIL.
     Lisätään Procfile, jotta Heroku osaa käynnistyä.
+
+## .env
+    Luodaan tiedosto .env ja annetaan sinne PORT. 
+    Luodaan myös configurations ja installoidaan dotenv.
+    Sitten voidaan tuoda index.ts:ssä PORT.

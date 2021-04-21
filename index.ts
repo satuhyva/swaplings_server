@@ -1,6 +1,7 @@
 import app from './src/app'
+import configurations from './utils/configurations'
 
 
-app.listen({ port: 4000 }, () => {
+app.listen({ port: configurations.PORT }, () => {
     console.log('Swaplings server ready!')
 })
