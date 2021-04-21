@@ -36,8 +36,8 @@ jobs:
         run: npm run tsc
       # - name: setup database tables
       #   run: node build/src/database/createDatabase.js
-      # - name: run the tests
-      #   run: npm run test
+      - name: run the tests
+        run: npm run test
       - uses: akhileshns/heroku-deploy@v3.8.9
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}

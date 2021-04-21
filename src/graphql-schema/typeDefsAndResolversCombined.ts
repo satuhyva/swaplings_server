@@ -1,6 +1,6 @@
-
 import personSchema from './person'
 import itemSchema from './item'
+import serverSchema from './server'
 import { gql } from 'apollo-server-express'
 import { DocumentNode } from 'apollo-link'
 
@@ -8,7 +8,8 @@ import { DocumentNode } from 'apollo-link'
 
 const separateSchemas = [
     personSchema,
-    itemSchema
+    itemSchema,
+    serverSchema
 ]
 
 let typeDefsCombined: DocumentNode[] = [gql`

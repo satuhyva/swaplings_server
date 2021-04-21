@@ -74,8 +74,20 @@
     Heroku Account settingsistä saadaan Heroku API KEY.
     Tämä annetaan GitHub secret'inä. Samoin APP NAME JA HEROKU EMAIL.
     Lisätään Procfile, jotta Heroku osaa käynnistyä.
+    (Ja aina committoidaan gittiin ja se automaattisesti GitHub Actionin kautta
+    yrittää suorittaa deploymentin Herokuun).
 
-## .env
+## .env ja configurations:
     Luodaan tiedosto .env ja annetaan sinne PORT. 
     Luodaan myös configurations ja installoidaan dotenv.
-    Sitten voidaan tuoda index.ts:ssä PORT.
+    Sitten voidaan tuoda index.ts:ssä PORT (joka otetaan process.env.PORT:ista).
+    Nyt onnistuu deployment Herokuun niin, että https://swaplings.herokuapp.com/health toimii
+    ja palauttaa "OK".
+    HUOM: Nyt onnistuu myös se, että mennään http://localhost:4000/graphql 'ssa olevaan 
+    graphql-playgroundiin ja kirjoitetaan siellä haku-url:ksi https://swaplings.herokuapp.com/graphql.
+    Tähän voidaan suorittaa graphql-hakuja.
+
+## Aloitetaan luomaan testejä:
+    Luodaan jest.confing.ts.
+    Sijoitetaan kaikki testit src/tests-kansioon.
+    
