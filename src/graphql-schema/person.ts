@@ -1,28 +1,42 @@
 import { gql } from 'apollo-server-express'
+import { PersonType } from '../types/PersonType'
 
-const personsList = [
-    { username: 'Shallan Davar', email: 'shallan.davar@SpeechGrammarList.com' },
-    { username: 'Kaladin Stormblessed', email: 'kaladin.storblessed@SpeechGrammarList.com' },
-    { username: 'Jasnah Kholin', email: 'jasnah.kholin@SpeechGrammarList.com' },
+
+export const personsList = [
+    { id: 'a1', username: 'Shallan Davar', email: 'shallan.davar@SpeechGrammarList.com' },
+    { id: 'g6', username: 'Kaladin Stormblessed', email: 'kaladin.storblessed@SpeechGrammarList.com' },
+    { id: 'h9', username: 'Jasnah Kholin', email: 'jasnah.kholin@SpeechGrammarList.com' },
 ]
 
 const typeDefs = gql`
     type Person {
-        username: String
+        id: ID!
+        username: String!
         email: String
     }
     extend type Query {
         persons: [Person]
     }
+    extend type Mutation {
+        addNewPerson(
+            username: String!,
+            password: String!,
+            email: String
+        ): Boolean
+    }
 `
 
 const resolvers = {
     Query: {
-        persons: () => personsList
+        persons: (): PersonType[] => personsList
     },
-    // Mutation: {
-
-    // }
+    Mutation: {
+        addNewPerson: (_: void, args: { username: string, email: string }): boolean => {
+            const newList = [...personsList, { username: args.username, email: args.email }]
+            console.log(newList)
+            return true
+        }
+    }
 
 }
 

@@ -1,27 +1,46 @@
 import { gql } from 'apollo-server-express'
+import { ItemDatabaseType } from '../types/item/ItemDatabaseType'
+// import { ItemGraphQLType } from '../types/item/ItemGraphQLType'
+import { PriceGroupEnum } from '../types/PriceGroupEnum'
+import { personsList } from './person'
+import { PersonType } from '../types/PersonType'
 
-const itemsList = [
-    { title: 'Wonderboom II', price: 150 },
-    { title: 'Kenwood bread maker', price: 80 },
+
+
+const itemsList: ItemDatabaseType[] = [
+    { id: 'plkol', title: 'Wonderboom II', priceGroup: PriceGroupEnum.GROUP_8, ownerID: 'a1' },
+    { id: 'efdfrd', title: 'Kenwood bread maker', priceGroup: PriceGroupEnum.GROUP_9, ownerID: 'a1'  },
+    { id: 'swqrtuu', title: 'FL Freezer', priceGroup: PriceGroupEnum.GROUP_8, ownerID: 'g6'  },
 ]
+
+
 
 const typeDefs = gql`
     type Item {
-        title: String
-        price: Int
+        id: ID!
+        title: String!
+        priceGroup: String!
+        owner: Person!
     }
     extend type Query {
-        items: [Item]
+        allItemsInDatabase: [Item]
     }
 `
 
 const resolvers = {
     Query: {
-        items: () => itemsList
+        allItemsInDatabase: (_root: void): ItemDatabaseType[] => {
+            // console.log(itemsList)
+            return itemsList
+        }
     },
-    // Mutation: {
-        
-    // }
+    Item: {
+        owner: (root: ItemDatabaseType): PersonType => {
+            // console.log(root)
+            const person = personsList.filter(p => p.id === root.ownerID)
+            return person[0]
+        }
+    }
 }
 
 export default {

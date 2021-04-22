@@ -10,7 +10,7 @@ const typeDefs = gql`
 
 const resolvers = {
     Query: {
-        health: () => 'OK'
+        health: (): string => 'OK'
     },
 }
 

@@ -14,62 +14,48 @@ const separateSchemas = [
 
 let typeDefsCombined: DocumentNode[] = [gql`
     type Query
-    # type Mutation
+    type Mutation
 `]
-// let resolversCombined = { Query: {} }
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const combinedQueries: { [key: string]: any } = {}
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// const combinedMutations: { [key: string]: any } = {}
+const combinedMutations: { [key: string]: any } = {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let combinedCustomResolvers: { [key: string]: any } = {}
 
 
 separateSchemas.forEach(schema => {
+    
     typeDefsCombined = [...typeDefsCombined, schema.typeDefs]
 
-    for (const [key, value] of Object.entries(schema.resolvers.Query)) {
-        if (key in combinedQueries) {
-            throw new Error(`Query ${key} already exists!`)
+    for (const [name, content] of Object.entries(schema.resolvers)) {
+        if (name === 'Query') {
+            for (const [key, value] of Object.entries(content)) {
+                if (key in combinedQueries) {
+                    throw new Error(`Query ${key} already exists!`)
+                } else {
+                    combinedQueries[key] = value
+                }
+              }
+        } else if (name === 'Mutation') {
+            for (const [key, value] of Object.entries(content)) {
+                if (key in combinedMutations) {
+                    throw new Error(`Mutation ${key} already exists!`)
+                } else {
+                    combinedMutations[key] = value
+                }
+              }
         } else {
-            // We will allow adding type any resolver for we do not want to type every resolver typesctipr type here!
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            combinedQueries[key] = value
+            combinedCustomResolvers = { ...combinedCustomResolvers, ...schema.resolvers }
         }
-      }
-
-    //   for (const [key, value] of Object.entries(schema.resolvers.Mutation)) {
-    //     console.log(key, value)
-    //     if (key in combinedMutations) {
-    //         throw new Error(`Mutation ${key} already exists!`)
-    //     } else {
-    //         // We will allow adding type any resolver for we do not want to type every resolver typesctipr type here!
-    //         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    //         combinedMutations[key] = value
-    //     }
-    //   }
-
-    // resolversCombined = deepmerge(resolversCombined, schema.resolvers)
-    // console.log(schema.typeDefs)
-    // console.log(schema.resolvers)
+    }
 })
 
-const resolversCombined = { Query: combinedQueries }
-// const resolversCombined = { Query: combinedQueries, Mutation: combinedMutations }
+
+
+const resolversCombined = { Query: combinedQueries, Mutation: combinedMutations, ...combinedCustomResolvers }
 const typeDefsAndResolversCombined = { typeDefs: typeDefsCombined, resolvers: resolversCombined }
 
 export default typeDefsAndResolversCombined
 
-// // Construct a schema, using GraphQL schema language
-// const typeDefs = gql`
-//   type Query {
-//     hello: String
-//   }
-// `
-
-// // Provide resolver functions for your schema fields
-// const resolvers = {
-//   Query: {
-//     hello: () => 'Hello world!',
-//   },
-// }
-
-// export default { typeDefs, resolvers }
