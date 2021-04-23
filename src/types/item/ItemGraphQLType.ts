@@ -1,10 +1,10 @@
 import { PriceGroupEnum } from '../PriceGroupEnum'
-import { PersonType } from '../PersonType'
+import { PersonGraphQLType } from '../person/PersonGraphQLType'
 
 
 export type ItemGraphQLType = {
     id: string,
     title: string,
     priceGroup: PriceGroupEnum,
-    ownerID: PersonType
+    owner: PersonGraphQLType
 }

@@ -1,4 +1,4 @@
-export type PersonType = {
+export type PersonDatabaseType = {
     id: string,
     username: string,
     email?: string

@@ -3,8 +3,7 @@ import { ItemDatabaseType } from '../types/item/ItemDatabaseType'
 // import { ItemGraphQLType } from '../types/item/ItemGraphQLType'
 import { PriceGroupEnum } from '../types/PriceGroupEnum'
 import { personsList } from './person'
-import { PersonType } from '../types/PersonType'
-
+import { PersonGraphQLType } from '../types/person/PersonGraphQLType'
 
 
 const itemsList: ItemDatabaseType[] = [
@@ -23,19 +22,27 @@ const typeDefs = gql`
         owner: Person!
     }
     extend type Query {
+        item(id: ID!): Item 
+        itemsByOwner(ownerId: ID!): [Item]
         allItemsInDatabase: [Item]
     }
 `
 
 const resolvers = {
     Query: {
+        item: (_root: void, args: { id: string }): ItemDatabaseType | null => {
+            return itemsList.filter(item => item.id === args.id)[0]
+        },
+        itemsByOwner: (_root: void, args: { ownerId: string }): ItemDatabaseType[] => {
+            return itemsList.filter(item => item.ownerID === args.ownerId)
+        },
         allItemsInDatabase: (_root: void): ItemDatabaseType[] => {
             // console.log(itemsList)
             return itemsList
         }
     },
     Item: {
-        owner: (root: ItemDatabaseType): PersonType => {
+        owner: (root: ItemDatabaseType): PersonGraphQLType => {
             // console.log(root)
             const person = personsList.filter(p => p.id === root.ownerID)
             return person[0]

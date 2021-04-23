@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-express'
-import { PersonType } from '../types/PersonType'
+import { PersonDatabaseType } from '../types/person/PersonDatabaseType'
+
 
 
 export const personsList = [
@@ -28,7 +29,7 @@ const typeDefs = gql`
 
 const resolvers = {
     Query: {
-        persons: (): PersonType[] => personsList
+        persons: (): PersonDatabaseType[] => personsList
     },
     Mutation: {
         addNewPerson: (_: void, args: { username: string, email: string }): boolean => {

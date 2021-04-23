@@ -17,45 +17,41 @@ let typeDefsCombined: DocumentNode[] = [gql`
     type Mutation
 `]
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const combinedQueries: { [key: string]: any } = {}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const combinedMutations: { [key: string]: any } = {}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let combinedCustomResolvers: { [key: string]: any } = {}
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let resolversAllCombined: any[] = []
 
 separateSchemas.forEach(schema => {
-    
     typeDefsCombined = [...typeDefsCombined, schema.typeDefs]
 
     for (const [name, content] of Object.entries(schema.resolvers)) {
-        if (name === 'Query') {
-            for (const [key, value] of Object.entries(content)) {
-                if (key in combinedQueries) {
-                    throw new Error(`Query ${key} already exists!`)
-                } else {
-                    combinedQueries[key] = value
-                }
-              }
-        } else if (name === 'Mutation') {
-            for (const [key, value] of Object.entries(content)) {
-                if (key in combinedMutations) {
-                    throw new Error(`Mutation ${key} already exists!`)
-                } else {
-                    combinedMutations[key] = value
-                }
-              }
+        let resolverGroupToUpdate
+        resolversAllCombined.forEach(group => {
+            if (Object.keys(group)[0] === name) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                resolverGroupToUpdate = group
+            }
+        })
+        if (resolverGroupToUpdate === undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newResolverGroup: { [key: string]: any } = {}
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            newResolverGroup[name] = content
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            resolversAllCombined = [ ...resolversAllCombined, newResolverGroup]
         } else {
-            combinedCustomResolvers = { ...combinedCustomResolvers, ...schema.resolvers }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const toUpdate: any = Object.values(resolverGroupToUpdate)[0]
+            for (const [resolverName, resolverFunction] of Object.entries(content)) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                toUpdate[resolverName] = resolverFunction
+            }
         }
     }
 })
 
-
-
-const resolversCombined = { Query: combinedQueries, Mutation: combinedMutations, ...combinedCustomResolvers }
-const typeDefsAndResolversCombined = { typeDefs: typeDefsCombined, resolvers: resolversCombined }
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const typeDefsAndResolversCombined = { typeDefs: typeDefsCombined, resolvers: resolversAllCombined }
 
 export default typeDefsAndResolversCombined
 
