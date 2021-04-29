@@ -1,5 +1,7 @@
 export type PersonDatabaseType = {
     id: string,
     username: string,
-    email?: string
+    passwordHash: string,
+    email: string | null,
+    ownedItemdIds: string[] | null,
 }

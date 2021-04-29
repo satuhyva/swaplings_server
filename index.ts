@@ -4,7 +4,7 @@ import mongoose from 'mongoose'
 
 
 
-const connectToMongooseDatabase = async (): Promise<void> => {
+export const connectToMongooseDatabase = async (): Promise<void> => {
     mongoose.set('useFindAndModify', false)
     mongoose.set('useCreateIndex', true)
 
