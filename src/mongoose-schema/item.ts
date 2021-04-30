@@ -11,6 +11,8 @@ export interface IItem extends Document {
     ownerPersonId: IPerson['_id'],
     matchedToIds: IItem['_id'][],
     matchedFromIds: IItem['_id'][],
+    image_public_id: string | undefined,
+    image_secure_url: string | undefined,
     __v: number,
 }
 
@@ -44,10 +46,14 @@ const ItemSchema: Schema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'Item'
         }
-    ]
+    ],
+    image_public_id: {
+        type: String,
+    },
+    image_secure_url: {
+        type: String,
+    },
     
-
-
 })
 
 

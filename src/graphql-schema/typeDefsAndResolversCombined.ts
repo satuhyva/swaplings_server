@@ -1,6 +1,6 @@
-import personSchema from './person'
-import itemSchema from './item'
-import serverSchema from './server'
+import personSchema from './person/personGraphQLSchema'
+import itemSchema from './item/itemGraphQLSchema'
+import serverSchema from './server/serverGraphQLSchema'
 import { gql } from 'apollo-server-express'
 import { DocumentNode } from 'apollo-link'
 
