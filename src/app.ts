@@ -6,12 +6,12 @@ import Person from './mongoose-schema/person'
 import Item from './mongoose-schema/item'
 import Discussion from './mongoose-schema/discussion'
 import imageRouter from './routes/images/imageRouter'
+import AddNewPersonInputDirective from './graphql-schema/validations/AddNewPersonInputDirective'
 
 
 const app = express()
 
 app.use(express.urlencoded())
-
 
 
 
@@ -23,6 +23,9 @@ app.use('/upload', imageRouter)
 
 const server = new ApolloServer({ 
     ...typeDefsAndResolversCombined, 
+    schemaDirectives: {
+        personInputValidation: AddNewPersonInputDirective
+    },
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     context: () => {

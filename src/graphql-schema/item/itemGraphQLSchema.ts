@@ -28,33 +28,31 @@ const typeDefs = gql`
         id: ID!
         title: String!
         priceGroup: String!
-        owner: PrivatePerson!
         description: String!
-        matchedTo: [PublicItem]!
-        matchedFrom: [PublicItem]!
         image_public_id: String
         image_secure_url: String
+        owner: PrivatePerson!
+        matchedTo: [PublicItem]!
+        matchedFrom: [PublicItem]!
     }
 
     extend type Query {
         allPublicItemsInDatabase: [PublicItem]
-        allItemsByOwner(username: String!): [PrivateItem]
+        allPrivateItemsByOwner(username: String!): [PrivateItem]
         privateItemById(itemId: ID!): PrivateItem
-        itemSearch(priceGroup: String!): [PublicItem]
+        publicItemSearch(priceGroup: String!): [PublicItem]
     }  
 
     extend type Mutation {
         addNewItemToPerson(username: String!, title: String!, description: String!, priceGroup: String!): PrivateItem
         addItemMatch(targetItemId: ID!, interestedItemId: ID!): Boolean
+        cancelItemMatch(cancellingItemId: ID!, matchedItemId: ID!): Boolean
         setItemImage(itemId: ID!, image_public_id: String!, image_secure_url: String!): Boolean
         discussItem(itemFromId: ID!, itemToId: ID!, username: String!, content: String!): Boolean
+        
     }
 `
 
-
-
-// miten käynnistää keskustelu itemista?
-// omistaja kuittaa keskustelun pois ja itemin pois
 
 
 const resolvers = {
@@ -66,7 +64,7 @@ const resolvers = {
             return allItems.map(item => getItemPublicDatabaseType(item))
         },
 
-        allItemsByOwner: async (_root: void, args: { username: string }, context: { Person: Model<IPerson>, Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
+        allPrivateItemsByOwner: async (_root: void, args: { username: string }, context: { Person: Model<IPerson>, Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
             const { Person, Item } = context
             const person: IPerson | null = await Person.findOne({ username: args.username })
             if (!person) throw new ApolloError('Could not find person!')
@@ -81,7 +79,7 @@ const resolvers = {
             return getItemDatabaseType(item)
         },
 
-        itemSearch: async (_root: void, args: { priceGroup: PriceGroupEnum }, context: { Item: Model<IItem> }): Promise<ItemPublicDatabaseType[]> => {
+        publicItemSearch: async (_root: void, args: { priceGroup: PriceGroupEnum }, context: { Item: Model<IItem> }): Promise<ItemPublicDatabaseType[]> => {
             const { Item } = context
             const itemsInPriceGroup = await Item.find({ priceGroup: args.priceGroup })
             return itemsInPriceGroup.map(item => getItemPublicDatabaseType(item))
@@ -128,6 +126,19 @@ const resolvers = {
             return false
         },
 
+        cancelItemMatch: async(_root: void, args: { cancellingItemId: string, matchedItemId: string }, context: { Item: Model<IItem> }): Promise<boolean> => {
+            const { Item } = context
+            const cancellingItem: IItem | null = await Item.findById(args.cancellingItemId)
+            const matchedItem: IItem | null = await Item.findById(args.matchedItemId)
+            if (!cancellingItem) throw new ApolloError('Could not find CANCELLING item!')
+            if (!matchedItem) throw new ApolloError('Could not find MATCHED item!')
+            cancellingItem.matchedToIds = cancellingItem.matchedToIds.filter(itemId => itemId.toString() !== args.matchedItemId.toString())
+            await cancellingItem.save()
+            matchedItem.matchedFromIds = matchedItem.matchedFromIds.filter(itemId => itemId.toString() !== args.cancellingItemId.toString())
+            await matchedItem.save()
+            return true
+        },
+
         setItemImage: async (_root: void, args: { itemId: string, image_public_id: string, image_secure_url: string }, context: { Item: Model<IItem> }): Promise<boolean> => {
             const { Item } = context
             try {
@@ -154,23 +165,17 @@ const resolvers = {
                 (itemTo.ownerPersonId as unknown as  { username: string }).username !== args.username) {
                 throw new ApolloError('Person trying to discuss is not an owner of items in this discussion!')
             }
-
+            const newDiscussionPiece = { content: args.content, postingPersonId: personDiscussing._id, createdAt: new Date().toISOString() }
             const discussion = await Discussion.findOne({ itemFromId: args.itemFromId, itemToId: args.itemToId })
             if (!discussion) {
-                const newDiscussion = new Discussion({ itemFromId: args.itemFromId, itemToId: args.itemToId, story: {
-                    content: 'JOKU VAAN VIESTI', postingPersonId: personDiscussing._id, createdAt: new Date().toISOString()
-                } })
+                const newDiscussion = new Discussion({ itemFromId: args.itemFromId, itemToId: args.itemToId, story: newDiscussionPiece })
                 await newDiscussion.save()
                 return true
             } else {
-                await Discussion.findOneAndUpdate(
-                    { itemFromId: args.itemFromId, itemToId: args.itemToId },
-                    { $push: { 'story': { content: args.content, postingPersonId: personDiscussing._id, createdAt: new Date().toISOString() } } },
-                    { new: true }
-                )
+                discussion.story = [...discussion.story, newDiscussionPiece ]
+                await discussion.save()
                 return true
             }
-            return false
         }
     },
 

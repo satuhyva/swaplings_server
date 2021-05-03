@@ -9,7 +9,16 @@ import { getItemDatabaseType } from '../item/getItemDatabaseType'
 import { getPersonDatabaseType } from './getPersonDatabaseType'
 
 
+
 const typeDefs = gql`
+
+    directive @personInputValidation on INPUT_FIELD_DEFINITION
+
+    input AddNewPersonInput {
+        username: String! @personInputValidation
+        password: String! @personInputValidation
+        email: String @personInputValidation
+    }
 
     type PrivatePerson {
         id: ID!
@@ -25,11 +34,7 @@ const typeDefs = gql`
     }
 
     extend type Mutation {
-        addNewPerson(
-            username: String!,
-            password: String!,
-            email: String
-        ): PrivatePerson
+        addNewPerson(personInput: AddNewPersonInput!): PrivatePerson
     }
 
 `
@@ -58,21 +63,23 @@ const resolvers = {
 
     Mutation: {
 
-        addNewPerson: async (_: void, args: { username: string, password: string, email: string }, context: { Person: Model<IPerson> }): 
+        addNewPerson: async (_: void, args: { personInput: { username: string, password: string, email: string } }, context: { Person: Model<IPerson> }): 
             Promise<Omit<PersonDatabaseType, 'passwordHash'>> => {
             const { Person } = context
-            if (args.email) {
-                const existingPersonWithEmail = await Person.find({ email: args.email })
+            const { username, password, email } = args.personInput
+            if (email) {
+                const existingPersonWithEmail = await Person.find({ email: email })
                 if (existingPersonWithEmail.length > 0) {
                     throw new ApolloError('Email already in use. Duplicate emails are not allowed.')
                 }
             }
             const salt = bcryptjs.genSaltSync(10)
-            const passwordHash = bcryptjs.hashSync(args.password, salt)
-            const personToAdd = new Person({ username: args.username, passwordHash: passwordHash, email: args.email })
+            const passwordHash = bcryptjs.hashSync(password, salt)
+            const personToAdd = new Person({ username: username, passwordHash: passwordHash, email: email })
             const savedNewPerson: IPerson = await personToAdd.save()
             return { id: savedNewPerson._id, username: savedNewPerson.username, email: savedNewPerson.email, ownedItemdIds: savedNewPerson.ownedItemIds }
         },
+
 
     },
 
@@ -84,7 +91,8 @@ const resolvers = {
             return itemsByPerson.map(item => getItemDatabaseType(item))
         },
         
-    }
+    },
+
 
 }
 
