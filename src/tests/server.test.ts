@@ -1,7 +1,7 @@
 import supertest from 'supertest'
 import app from '../app'
 const testServer = supertest(app)
-import { performTestServerQuery } from './helpers'
+import { performTestServerQuery } from './queries'
 
 
 

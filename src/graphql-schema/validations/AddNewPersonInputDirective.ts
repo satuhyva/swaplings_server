@@ -1,6 +1,6 @@
 import { ApolloError, SchemaDirectiveVisitor } from 'apollo-server-express'
 import { GraphQLInputField, GraphQLScalarType, GraphQLNonNull } from 'graphql'
-
+import { INVALID_USERNAME, INVALID_PASSWORD, INVALID_EMAIL } from '../validations/errorMessages'
 
 
 
@@ -24,23 +24,21 @@ class AddNewPersonInputDirective extends SchemaDirectiveVisitor {
 const checkPersonInputValidity = (target: 'username' | 'password' | 'email', value: unknown): void => {
     if (target === 'username') {
         if (!value || !(typeof value === 'string' ) || value.length < 3 || value.length > 25) {
-            throw new ApolloError('Error in person input in field: username. Username must be a string with 3-25 characters.')
+            throw new ApolloError(INVALID_USERNAME)
         }
     } else if (target === 'password') {
         if (!value || !(typeof value === 'string') || value.length < 8 || value.length > 25) {
-            throw new ApolloError('Error in person input in field: password. Password must be a string with 8-25 characters.')
+            throw new ApolloError(INVALID_PASSWORD)
         }
     } else if (target === 'email') {
         if (!value) return undefined
         else {
             const regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+[.]([a-zA-Z]{2,5})$/
             if (typeof value !== 'string' || !(regex.test(value))) {
-                throw new ApolloError('Error in person input in field: email. Email must be a proper email.')
+                throw new ApolloError(INVALID_EMAIL)
             }
         }
-    } else {
-        throw new Error('dsfdsfds')
-    }
+    } 
 }
 
 

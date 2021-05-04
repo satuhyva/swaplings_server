@@ -15,6 +15,15 @@ import { getItemDatabaseType } from './getItemDatabaseType'
 
 const typeDefs = gql`
 
+    directive @itemInputValidation on INPUT_FIELD_DEFINITION
+
+    input AddNewItemToPersonInput {
+        username: String! @itemInputValidation
+        title: String! @itemInputValidation
+        priceGroup: String! @itemInputValidation
+        description: String! @itemInputValidation
+    }
+
     type PublicItem {
         id: ID!
         title: String!
@@ -44,12 +53,15 @@ const typeDefs = gql`
     }  
 
     extend type Mutation {
-        addNewItemToPerson(username: String!, title: String!, description: String!, priceGroup: String!): PrivateItem
+        addNewItemToPerson(itemInput: AddNewItemToPersonInput!): PrivateItem
         addItemMatch(targetItemId: ID!, interestedItemId: ID!): Boolean
         cancelItemMatch(cancellingItemId: ID!, matchedItemId: ID!): Boolean
         setItemImage(itemId: ID!, image_public_id: String!, image_secure_url: String!): Boolean
         discussItem(itemFromId: ID!, itemToId: ID!, username: String!, content: String!): Boolean
-        
+        # markItemAsSwapped: kumpikin osapuoli osaltaan voi merkitä, että on swapped, silloin häviää henkilöltä näkyvistä
+        # kun toinenkin merkitsee swapped, silloin poistuu molemmat itemit ja kaikki keskustelut
+        # LISÄÄ SWAPPED-TILA ITEMILLE! ja tämän mukaisesti hakuja...
+
     }
 `
 
@@ -90,15 +102,16 @@ const resolvers = {
 
         addNewItemToPerson: async (
             _root: void, 
-            args: { username: string, title: string, description: string, priceGroup: string }, 
+            args: { itemInput: { username: string, title: string, description: string, priceGroup: string }}, 
             context: { Person: Model<IPerson>, Item: Model<IItem> }
             ): Promise<ItemDatabaseType> => {
 
                 const { Person, Item } = context
-                const person: IPerson | null = await Person.findOne({ username: args.username })
+                const {  username, title, description, priceGroup } = args.itemInput
+                const person: IPerson | null = await Person.findOne({ username: username })
                 if (!person) throw new ApolloError('Could not find person!')
 
-                const itemToAdd = new Item({ title: args.title, description: args.description, priceGroup: args.priceGroup, ownerPersonId: person._id })
+                const itemToAdd = new Item({ title: title, description: description, priceGroup: priceGroup, ownerPersonId: person._id })
                 const savedItem: IItem = await itemToAdd.save()
                 
                 person.ownedItemIds = [...person.ownedItemIds, savedItem._id]
