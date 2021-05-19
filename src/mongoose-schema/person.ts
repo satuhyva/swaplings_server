@@ -6,9 +6,11 @@ import { IItem } from './item'
 
 export interface IPerson extends Document {
     _id: string,
-    username: string,
-    passwordHash: string,
+    username: string | null,
+    passwordHash: string | null,
     email: string | null,
+    facebookId: string | null,
+    facebookName: string | null,
     ownedItemIds: IItem['_id'][],
     __v: number,
 }
@@ -17,14 +19,20 @@ export interface IPerson extends Document {
 const PersonSchema: Schema = new Schema({
     username: {
         type: String,
-        required: true,
         unique: true,
     },
     passwordHash: {
         type: String,
-        required: true
     },
     email: {
+        type: String,
+        unique: true,
+    },
+    facebookId: {
+        type: String,
+        unique: true,
+    },
+    facebookName: {
         type: String,
     },
     ownedItemIds: [

@@ -1,10 +1,12 @@
 import supertest from 'supertest'
 import app from '../app'
-import { performTestServerQuery, addPersonQuery, allPersonsInDatabaseQuery, privatePersonByUsername } from './queries'
+import { performTestServerQuery, addPersonQuery, 
+    // allPersonsInDatabaseQuery, privatePersonByUsername 
+} from './queries'
 import { connectToMongooseDatabase } from '../../index'
 import mongoose from 'mongoose'
 import { clearTestDatabase } from './clearTestDatabase'
-import { INVALID_USERNAME, INVALID_PASSWORD, INVALID_EMAIL } from '../graphql-schema/validations/errorMessages'
+import { INVALID_USERNAME, INVALID_PASSWORD, INVALID_EMAIL } from '../graphql-schema/custom-scalars/errorMessages'
 
 const testServer = supertest(app)
 
@@ -20,17 +22,17 @@ type AddNewPersonResponseType = {
     }
 }
 
-type AllPersonsInDatabaseResponseType = {
-    data: { 
-        allPersonsInDatabase: {
-            id: string,
-            username: string,
-            email: string | null,
-            passwordHash: string,
-            ownedItems: []
-        }[] 
-    }
-}
+// type AllPersonsInDatabaseResponseType = {
+//     data: { 
+//         allPersonsInDatabase: {
+//             id: string,
+//             username: string,
+//             email: string | null,
+//             passwordHash: string,
+//             ownedItems: []
+//         }[] 
+//     }
+// }
 
 
 
@@ -111,34 +113,34 @@ describe('PERSON', () => {
         expect(response.text.toString().includes(INVALID_EMAIL))
     })
 
-    test('that was just created can be found in database (query all persons in database)', async () => {
-        const USERNAME = 'Jasnah Kholin'
-        const PASSWORD = 'secretsecret'
-        const EMAIL = 'jasnah.kholin@gmail.com'
-        const queryAddPerson = addPersonQuery(USERNAME, PASSWORD, EMAIL)
-        await performTestServerQuery(testServer, queryAddPerson)
-        const queryAllPersonsInDatabase = allPersonsInDatabaseQuery()
-        const response = await performTestServerQuery(testServer, queryAllPersonsInDatabase) as Response
-        expect(response.status).toBe(200)
-        const personsInDatabase = (response.body as unknown as AllPersonsInDatabaseResponseType).data.allPersonsInDatabase
-        expect(personsInDatabase.length).toBe(1)
-        expect(personsInDatabase[0].username).toBe(USERNAME)
-        expect(personsInDatabase[0].passwordHash).toBeDefined()
-        expect(personsInDatabase[0].email).toBe(EMAIL)
-        expect(personsInDatabase[0].ownedItems.length).toBe(0)
-    })
+    // test('that was just created can be found in database (query all persons in database)', async () => {
+    //     const USERNAME = 'Jasnah Kholin'
+    //     const PASSWORD = 'secretsecret'
+    //     const EMAIL = 'jasnah.kholin@gmail.com'
+    //     const queryAddPerson = addPersonQuery(USERNAME, PASSWORD, EMAIL)
+    //     await performTestServerQuery(testServer, queryAddPerson)
+    //     const queryAllPersonsInDatabase = allPersonsInDatabaseQuery()
+    //     const response = await performTestServerQuery(testServer, queryAllPersonsInDatabase) as Response
+    //     expect(response.status).toBe(200)
+    //     const personsInDatabase = (response.body as unknown as AllPersonsInDatabaseResponseType).data.allPersonsInDatabase
+    //     expect(personsInDatabase.length).toBe(1)
+    //     expect(personsInDatabase[0].username).toBe(USERNAME)
+    //     expect(personsInDatabase[0].passwordHash).toBeDefined()
+    //     expect(personsInDatabase[0].email).toBe(EMAIL)
+    //     expect(personsInDatabase[0].ownedItems.length).toBe(0)
+    // })
 
-    test('that was created can be found in database (query one user by username)', async () => {
-        const USERNAME = 'Shallan Davar'
-        const PASSWORD = 'secretsecret'
-        const EMAIL = 'shallan.davar@gmail.com'
-        const queryCreatePerson = addPersonQuery(USERNAME, PASSWORD, EMAIL)
-        await performTestServerQuery(testServer, queryCreatePerson)
-        const queryAddedPerson = privatePersonByUsername(USERNAME)
-        const response = await performTestServerQuery(testServer, queryAddedPerson) as Response
-        expect(response.text.toString().includes(USERNAME))
-        expect(response.text.toString().includes(EMAIL))
-    })
+    // test('that was created can be found in database (query one user by username)', async () => {
+    //     const USERNAME = 'Shallan Davar'
+    //     const PASSWORD = 'secretsecret'
+    //     const EMAIL = 'shallan.davar@gmail.com'
+    //     const queryCreatePerson = addPersonQuery(USERNAME, PASSWORD, EMAIL)
+    //     await performTestServerQuery(testServer, queryCreatePerson)
+    //     const queryAddedPerson = privatePersonByUsername(USERNAME)
+    //     const response = await performTestServerQuery(testServer, queryAddedPerson) as Response
+    //     expect(response.text.toString().includes(USERNAME))
+    //     expect(response.text.toString().includes(EMAIL))
+    // })
 
     afterAll(async () => {
         await mongoose.connection.close()

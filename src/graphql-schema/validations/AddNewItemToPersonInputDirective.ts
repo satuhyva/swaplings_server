@@ -1,7 +1,7 @@
 import { ApolloError, SchemaDirectiveVisitor } from 'apollo-server-express'
 import { GraphQLInputField, GraphQLScalarType, GraphQLNonNull } from 'graphql'
 import { isPriceGroup } from './isPriceGroup'
-import { INVALID_USERNAME, INVALID_TITLE, INVALID_PRICEGROUP, INVALID_DESCRIPTION } from '../validations/errorMessages'
+import { INVALID_USERNAME, INVALID_TITLE, INVALID_PRICEGROUP, INVALID_DESCRIPTION } from '../custom-scalars/errorMessages'
 
 
 
