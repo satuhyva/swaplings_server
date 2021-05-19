@@ -14,6 +14,8 @@ import { LoginPersonInputType } from '../../types/person/LoginPersonInputType'
 import { loginPersonService } from './loginPersonService'
 import { loginPersonWithFacebookService } from './loginPersonWithFacebookService'
 import { FacebookInputType } from '../../types/person/FacebookInputType'
+import { RemovePersonType } from '../../types/person/RemovePersonType'
+import { removePersonService } from './removePersonService'
 
 
 const typeDefs = gql`
@@ -43,6 +45,14 @@ const typeDefs = gql`
         jwtToken: String
     }
 
+    type RemovePersonResponse implements MutationResponse {
+        code: String!
+        success: Boolean!
+        message: String!
+        username: String
+        facebookName: String
+    }
+
     # type PrivatePerson {
     #     id: ID!
     #     username: String
@@ -60,6 +70,7 @@ const typeDefs = gql`
         signUpPerson(signUpInput: SignUpInput!): LoginSignUpResponse!
         loginPerson(loginInput: LoginInput!): LoginSignUpResponse!
         facebookLogin(facebookLoginInput: FacebookLoginInput!): LoginSignUpResponse!
+        removePerson: RemovePersonResponse
     }
 
 `
@@ -98,7 +109,13 @@ const resolvers = {
             Promise<LoginSignUpResponseType> => {
                 const loggedInPerson = await loginPersonWithFacebookService(args.facebookLoginInput, context.Person)
                 return loggedInPerson
+        },
+
+        removePerson: async (_root: void, _args: void, context: { authenticatedPerson: IPerson, Person: Model<IPerson> }): Promise<RemovePersonType> => {
+            const removePersonResult = await removePersonService(context.authenticatedPerson, context.Person)
+            return removePersonResult
         }
+
 
     },
 

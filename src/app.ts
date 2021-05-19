@@ -6,8 +6,6 @@ import Person from './mongoose-schema/person'
 // import Item from './mongoose-schema/item'
 // import Discussion from './mongoose-schema/discussion'
 import imageRouter from './routes/images/imageRouter'
-// import SignUpLoginPersonInputDirective from './graphql-schema/validations/SignUpLoginPersonInputDirective'
-// import AddNewItemToPersonInputDirective from './graphql-schema/validations/AddNewItemToPersonInputDirective'
 import { authenticationGraphQL } from './utils/authenticationGraphQL'
 import { IPerson } from './mongoose-schema/person'
 
@@ -29,12 +27,6 @@ app.use('/upload', imageRouter)
 
 const server = new ApolloServer({ 
     ...typeDefsAndResolversCombined, 
-    schemaDirectives: {
-        // personInputValidation: SignUpLoginPersonInputDirective,
-        // itemInputValidation: AddNewItemToPersonInputDirective,
-
-    },
-
     context: async({ req }) => {
         const authenticatedPerson: IPerson | undefined = await authenticationGraphQL(req)
         return { 

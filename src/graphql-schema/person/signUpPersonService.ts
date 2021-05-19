@@ -11,7 +11,6 @@ import {
     SIGNUP_EMAIL_ALREADY_IN_USE,
     SIGNUP_SUCCESS,
     SIGNUP_USERNAME_ALREADY_IN_USE,
-    SIGNUP_USERNAME_AND_PASSWORD_BOTH_REQUIRED,
     SIGNUP_ERROR_DATABASE
  } from './errorMessages'
 
@@ -23,17 +22,6 @@ export const signUpPersonService = async (
     ): Promise<LoginSignUpResponseType> => {
 
     const { username, password, email } = personInput
-
-    if (!username || !password) {
-        return {
-            code: '400',
-            success: false,
-            message: SIGNUP_USERNAME_AND_PASSWORD_BOTH_REQUIRED,
-            username: undefined, 
-            facebookName: undefined, 
-            jwtToken: undefined 
-        }
-    }
 
     if (email) {
         const existingPersonWithEmail = await Person.find({ email: email })
@@ -77,7 +65,6 @@ export const signUpPersonService = async (
 
     let tokenContent: TokenContentType = { id: signingUpPerson._id }
     if (signingUpPerson.username) tokenContent = { ...tokenContent, username: signingUpPerson.username }
-    if (signingUpPerson.facebookName) tokenContent = { ...tokenContent, facebookName: signingUpPerson.facebookName }
     const token = jwt.sign(tokenContent, configurations.JWT_SECRET)
         
     return { 

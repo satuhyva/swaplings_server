@@ -8,21 +8,30 @@ import { LOGIN_FACEBOOK_DATABASE_ERROR, LOGIN_FACEBOOK_GRAPH_API_ERROR, LOGIN_FA
 import { FacebookInputType } from '../../types/person/FacebookInputType'
 import fetch from 'node-fetch'
 
+export type FacebookGraphAPIResponseType = {
+    id: string, 
+    name: string
+}
+
+const fetchPersonDataFromFacebookGraphAPI = async (userId: string, facebookAccessToken: string): Promise<FacebookGraphAPIResponseType | undefined> => {
+    const url = `https://graph.facebook.com/${userId}?fields=id,name&access_token=${facebookAccessToken}`
+    const response = await fetch(url)
+    const responseJSON = await response.json() as FacebookGraphAPIResponseType
+    if (responseJSON.id && responseJSON.name && responseJSON.id === userId) {
+        return responseJSON
+    } else return undefined
+}
+
+
 
 export const loginPersonWithFacebookService = async (facebookLoginInput: FacebookInputType,  Person: Model<IPerson>  ): Promise<LoginSignUpResponseType> => {
 
     const { userId, facebookAccessToken } = facebookLoginInput
-
     let personData: { id: string, name: string } | undefined = undefined
     try {
-        const url = `https://graph.facebook.com/${userId}?fields=id,name&access_token=${facebookAccessToken}`
-        const response = await fetch(url)
-        const responseJSON = await response.json() as { id: string, name: string }
-        if (responseJSON.id && responseJSON.name) {
-            personData = responseJSON
-        } else {
-            throw new Error()
-        }
+        const facebookResponseData = await fetchPersonDataFromFacebookGraphAPI(userId, facebookAccessToken)
+        if (facebookResponseData) personData = facebookResponseData
+        else throw new Error()
     } catch (error) {
         return {
             code: '400',

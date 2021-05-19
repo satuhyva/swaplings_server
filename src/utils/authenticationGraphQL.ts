@@ -6,6 +6,9 @@ import { TokenContentType } from '../types/authentication/TokenContentType'
 import { ApolloError } from 'apollo-server-express'
 
 
+export const AUTHENTICATION_FAILED = 'Authentication failed. Could not find person in database.'
+
+
 export const authenticationGraphQL = async (request: RequestWithAuthorization): Promise<IPerson | undefined> => {
 
     const authentication = request.headers.authorization
@@ -13,13 +16,12 @@ export const authenticationGraphQL = async (request: RequestWithAuthorization): 
     if (authentication) {
         const decodedToken = jwt.verify(authentication, configurations.JWT_SECRET)
         const tokenContent = decodedToken as unknown as TokenContentType
-        if (!tokenContent.id || !tokenContent.username) throw new ApolloError('Authentication failed')
+        if (!tokenContent.id || (!tokenContent.username && !tokenContent.facebookName)) throw new ApolloError(AUTHENTICATION_FAILED)
 
         const person: IPerson | null = await Person.findById(tokenContent.id)
-        if (!person) throw new ApolloError('Authentication failed')
+        if (!person) throw new ApolloError(AUTHENTICATION_FAILED)
         return person
     }
 
     return undefined
-
 }

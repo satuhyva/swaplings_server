@@ -11,7 +11,13 @@ const typeDefs = gql`
 `
 
 
-const resolvers = undefined
+const resolvers = {
+    MutationResponse: {
+        __resolveType: (): null =>{
+          return null
+        },
+      },
+}
 
 
 export default {

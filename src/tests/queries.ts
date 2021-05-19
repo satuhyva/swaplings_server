@@ -9,24 +9,30 @@ export const performTestServerQuery = async (testServer: supertest.SuperTest<sup
             }) 
 }
 
-export const addPersonQuery = (username?: string, password?: string, email?: string, facebookAccessToken?: string): string => {
-    let parameters = ''
-    if (username && password) {
-        parameters += `username: "${username}", password: "${password}"`
-        if (email) {
-            parameters += `, email: "${email}"`
-        }
-    } else if (facebookAccessToken) {
-        parameters += `facebookAccessToken: "${facebookAccessToken}"`
-    }
+export const performAuthorizedTestServerQuery = async (testServer: supertest.SuperTest<supertest.Test>, query: string, token: string): Promise<unknown> => {
+    return await testServer
+            .post('/graphql')
+            .set('authorization', token)
+            .send({
+                query: query
+            }) 
+}
 
+export const signUpPersonQuery = (username: string, password: string, email?: string): string => {
+    let parameters = `username: "${username}", password: "${password}"`
+    if (email) {
+        parameters += `, email: "${email}"`
+    }    
     return `
         mutation {
             signUpPerson(
-                personInput: {
+                signUpInput: {
                     ${parameters}
                 }
             ) {  
+                code,
+                success,
+                message,
                 username, 
                 facebookName,
                 jwtToken
@@ -35,48 +41,39 @@ export const addPersonQuery = (username?: string, password?: string, email?: str
     `
 }
 
-// export const allPersonsInDatabaseQuery = (): string => {
-//     return `
-//         query {
-//             allPersonsInDatabase { 
-//                 id, 
-//                 username, 
-//                 email, 
-//                 passwordHash, 
-//                 ownedItems {
-//                     title
-//                 }
-//             }
-//         }
-//     `
-// }
+export const loginPersonQuery = (username: string, password: string): string => {
+    const parameters = `username: "${username}", password: "${password}"` 
+    return `
+        mutation {
+            loginPerson(
+                loginInput: {
+                    ${parameters}
+                }
+            ) {  
+                code,
+                success,
+                message,
+                username, 
+                facebookName,
+                jwtToken
+            }
+        }
+    `
+}
 
-// export const privatePersonByUsername = (username: string): string => {
-//     const parameters = `username: "${username}"`
-//     return `
-//         query {
-//             privatePersonByUsername(${parameters}) {
-//                 username,
-//                 email
-//             }
-//         }
-// `
-// }
+export const removePersonQuery = (): string => {
+    return `
+        mutation {
+            removePerson {  
+                code,
+                success,
+                message,
+                username, 
+                facebookName
+            }
+        }
+    `
+}
 
-// export const addNewItemToPersonQuery = (username: string, title: string, priceGroup: string, description: string): string => {
-//     const parameters = `username: "${username}", title: "${title}", priceGroup: "${priceGroup}", description: "${description}"`
-//     return `
-//         mutation {
-//             addNewItemToPerson(
-//                 itemInput: {
-//                     ${parameters}
-//                 }
-//             ) { 
-//                 id, 
-//                 title, 
-//                 priceGroup,
-//                 description
-//             }
-//         }
-//     `
-// }
+
+

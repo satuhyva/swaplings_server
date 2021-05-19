@@ -1,38 +1,35 @@
 import supertest from 'supertest'
 import app from '../app'
-import { performTestServerQuery, addPersonQuery, 
-    // allPersonsInDatabaseQuery, privatePersonByUsername 
+import { 
+    performTestServerQuery, 
+    signUpPersonQuery,
+    loginPersonQuery,
+    performAuthorizedTestServerQuery,
+    removePersonQuery,
 } from './queries'
 import { connectToMongooseDatabase } from '../../index'
 import mongoose from 'mongoose'
 import { clearTestDatabase } from './clearTestDatabase'
-import { INVALID_USERNAME, INVALID_PASSWORD, INVALID_EMAIL } from '../graphql-schema/custom-scalars/errorMessages'
+import { SIGNUP_SUCCESS, LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS, REMOVE_PERSON_SUCCESS } from '../graphql-schema/person/errorMessages'
+import {
+    INVALID_USERNAME, INVALID_PASSWORD, INVALID_EMAIL
+} from '../graphql-schema/custom-scalars/errorMessages'
+import Person from '../mongoose-schema/person'
+import { LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD } from '../graphql-schema/person/errorMessages'
+import {
+    SignUpPersonResponseType,
+    LoginPersonResponseType,
+    SignUpInputValidationErrorType,
+    RemovePersonResponseType
+} from './types'
+import { USERNAME, PASSWORD, PASSWORDHASH, EMAIL, FACEBOOK_ID, FACEBOOK_NAME } from './constants'
+import jwt from 'jsonwebtoken'
+import configurations from '../utils/configurations'
+
+
 
 const testServer = supertest(app)
 
-
-type AddNewPersonResponseType = {
-    data: { 
-        addNewPerson: {
-            id: string,
-            username: string,
-            email: string | null,
-            ownedItems: []
-        } 
-    }
-}
-
-// type AllPersonsInDatabaseResponseType = {
-//     data: { 
-//         allPersonsInDatabase: {
-//             id: string,
-//             username: string,
-//             email: string | null,
-//             passwordHash: string,
-//             ownedItems: []
-//         }[] 
-//     }
-// }
 
 
 
@@ -47,100 +44,165 @@ describe('PERSON', () => {
     })
 
 
-    test('can be created with username, password and email as input', async () => {
-        const USERNAME = 'Shallan Davar'
-        const PASSWORD = 'secretsecret'
-        const EMAIL = 'shallan.davar@gmail.com'
-        const query = addPersonQuery(USERNAME, PASSWORD, EMAIL)
+    test('given proper username, password and email, person can sign up', async () => {
+        const query = signUpPersonQuery(USERNAME, PASSWORD, EMAIL)
         const response = await performTestServerQuery(testServer, query) as Response
         expect(response.status).toBe(200)
-        const addedPerson = (response.body as unknown as AddNewPersonResponseType).data.addNewPerson
-        expect(addedPerson.username).toBe(USERNAME)
-        expect(addedPerson.email).toBe(EMAIL)
-        expect(addedPerson.ownedItems.length).toBe(0)
+        const signedUpPerson = (response.body as unknown as SignUpPersonResponseType).data.signUpPerson
+        expect(signedUpPerson.code).toBe('200')
+        expect(signedUpPerson.success).toBe(true)
+        expect(signedUpPerson.message).toBe(SIGNUP_SUCCESS)
+        expect(signedUpPerson.username).toBe(USERNAME)
+        expect(signedUpPerson.facebookName).toBeNull()
+        expect(signedUpPerson.jwtToken).toBeDefined()
+        const person = await Person.findOne({ username: USERNAME }) as { username: string}
+        expect(person.username).toBe(USERNAME)
     })
 
-    test('can be created with username and password as input', async () => {
-        const USERNAME = 'King Elhokar'
-        const PASSWORD = 'secretsecret'
-        const query = addPersonQuery(USERNAME, PASSWORD)
+    test('given proper username and password (but no email), person can sign up', async () => {
+        const query = signUpPersonQuery(USERNAME, PASSWORD)
         const response = await performTestServerQuery(testServer, query) as Response
         expect(response.status).toBe(200)
-        const addedPerson = (response.body as unknown as AddNewPersonResponseType).data.addNewPerson
-        expect(addedPerson.username).toBe(USERNAME)
-        expect(addedPerson.ownedItems.length).toBe(0)
-        expect(addedPerson.email).toBeNull()
+        const signedUpPerson = (response.body as unknown as SignUpPersonResponseType).data.signUpPerson
+        expect(signedUpPerson.code).toBe('200')
+        expect(signedUpPerson.success).toBe(true)
+        expect(signedUpPerson.message).toBe(SIGNUP_SUCCESS)
+        expect(signedUpPerson.username).toBe(USERNAME)
+        expect(signedUpPerson.facebookName).toBeNull()
+        expect(signedUpPerson.jwtToken).toBeDefined()
+        const person = await Person.findOne({ username: USERNAME }) as { username: string}
+        expect(person.username).toBe(USERNAME)
     })
 
-    test('cannot be created with invalid (too short) username', async () => {
-        const USERNAME = '1'
-        const PASSWORD = 'secretsecret'
-        const query = addPersonQuery(USERNAME, PASSWORD)
+    test('given invalid (too short) username, a person cannot sign up', async () => {
+        const query = signUpPersonQuery('u', PASSWORD, EMAIL)
         const response = await performTestServerQuery(testServer, query) as Response
-        expect(response.text.toString().includes(INVALID_USERNAME))
+        expect(response.status).toBe(400)
+        const error = (response.body as unknown as SignUpInputValidationErrorType).errors[0].message
+        expect(error).toContain(INVALID_USERNAME)
     })
 
-    test('cannot be created with invalid (too long) username', async () => {
-        const USERNAME = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-        const PASSWORD = 'secretsecret'
-        const query = addPersonQuery(USERNAME, PASSWORD)
+    test('given invalid (too long) username, a person cannot sign up', async () => {
+        const query = signUpPersonQuery('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', PASSWORD, EMAIL)
         const response = await performTestServerQuery(testServer, query) as Response
-        expect(response.text.toString().includes(INVALID_USERNAME))
+        expect(response.status).toBe(400)
+        const error = (response.body as unknown as SignUpInputValidationErrorType).errors[0].message
+        expect(error).toContain(INVALID_USERNAME)
     })
 
-    test('cannot be created with invalid (too short) password', async () => {
-        const USERNAME = 'Shallan Davar'
-        const PASSWORD = 'secretsecret'
-        const query = addPersonQuery(USERNAME, PASSWORD)
+    test('given invalid (too short) password, a person cannot sign up', async () => {
+        const query = signUpPersonQuery(USERNAME, '1234567', EMAIL)
         const response = await performTestServerQuery(testServer, query) as Response
-        expect(response.text.toString().includes(INVALID_PASSWORD))
+        expect(response.status).toBe(400)
+        const error = (response.body as unknown as SignUpInputValidationErrorType).errors[0].message
+        expect(error).toContain(INVALID_PASSWORD)
     })
 
-    test('cannot be created with invalid (too long) password', async () => {
-        const USERNAME = 'Shallan Davar'
-        const PASSWORD = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-        const query = addPersonQuery(USERNAME, PASSWORD)
+    test('given invalid (too long) password, a person cannot sign up', async () => {
+        const query = signUpPersonQuery(USERNAME, 'sssssssssssssssssssssssssssssssssssssssssssssss', EMAIL)
         const response = await performTestServerQuery(testServer, query) as Response
-        expect(response.text.toString().includes(INVALID_PASSWORD))
+        expect(response.status).toBe(400)
+        const error = (response.body as unknown as SignUpInputValidationErrorType).errors[0].message
+        expect(error).toContain(INVALID_PASSWORD)
     })
 
-    test('cannot be created with invalid email', async () => {
-        const USERNAME = 'Shallan Davar'
-        const PASSWORD = 'secretsecret'
-        const EMAIL = 'shallan.davarmail.com'
-        const query = addPersonQuery(USERNAME, PASSWORD, EMAIL)
+    test('given invalid email, a person cannot sign up', async () => {
+        const query = signUpPersonQuery(USERNAME, PASSWORD, 'shallan.davar.gmail.com')
         const response = await performTestServerQuery(testServer, query) as Response
-        expect(response.text.toString().includes(INVALID_EMAIL))
+        expect(response.status).toBe(400)
+        const error = (response.body as unknown as SignUpInputValidationErrorType).errors[0].message
+        expect(error).toContain(INVALID_EMAIL)
     })
 
-    // test('that was just created can be found in database (query all persons in database)', async () => {
-    //     const USERNAME = 'Jasnah Kholin'
-    //     const PASSWORD = 'secretsecret'
-    //     const EMAIL = 'jasnah.kholin@gmail.com'
-    //     const queryAddPerson = addPersonQuery(USERNAME, PASSWORD, EMAIL)
-    //     await performTestServerQuery(testServer, queryAddPerson)
-    //     const queryAllPersonsInDatabase = allPersonsInDatabaseQuery()
-    //     const response = await performTestServerQuery(testServer, queryAllPersonsInDatabase) as Response
-    //     expect(response.status).toBe(200)
-    //     const personsInDatabase = (response.body as unknown as AllPersonsInDatabaseResponseType).data.allPersonsInDatabase
-    //     expect(personsInDatabase.length).toBe(1)
-    //     expect(personsInDatabase[0].username).toBe(USERNAME)
-    //     expect(personsInDatabase[0].passwordHash).toBeDefined()
-    //     expect(personsInDatabase[0].email).toBe(EMAIL)
-    //     expect(personsInDatabase[0].ownedItems.length).toBe(0)
-    // })
+    test('given valid username and password, a person can login', async () => {
+        const personToAdd = new Person({ username: USERNAME, passwordHash: PASSWORDHASH })
+        await personToAdd.save()
+        const query = loginPersonQuery(USERNAME, PASSWORD)
+        const response = await performTestServerQuery(testServer, query) as Response
+        expect(response.status).toBe(200)
+        const loggedInPerson = (response.body as unknown as LoginPersonResponseType).data.loginPerson
+        expect(loggedInPerson.code).toBe('200')
+        expect(loggedInPerson.success).toBe(true)
+        expect(loggedInPerson.message).toBe(LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS)
+        expect(loggedInPerson.username).toBe(USERNAME)
+        expect(loggedInPerson.facebookName).toBeNull()
+        expect(loggedInPerson.jwtToken).toBeDefined()
+        const person = await Person.findOne({ username: USERNAME }) as { username: string}
+        expect(person.username).toBe(USERNAME)
+    })
 
-    // test('that was created can be found in database (query one user by username)', async () => {
-    //     const USERNAME = 'Shallan Davar'
-    //     const PASSWORD = 'secretsecret'
-    //     const EMAIL = 'shallan.davar@gmail.com'
-    //     const queryCreatePerson = addPersonQuery(USERNAME, PASSWORD, EMAIL)
-    //     await performTestServerQuery(testServer, queryCreatePerson)
-    //     const queryAddedPerson = privatePersonByUsername(USERNAME)
-    //     const response = await performTestServerQuery(testServer, queryAddedPerson) as Response
-    //     expect(response.text.toString().includes(USERNAME))
-    //     expect(response.text.toString().includes(EMAIL))
-    // })
+    test('given invalid username, a person cannot login', async () => {
+        const personToAdd = new Person({ username: USERNAME, passwordHash: PASSWORDHASH })
+        await personToAdd.save()
+        const person = await Person.findOne({ username: USERNAME }) as { username: string}
+        expect(person.username).toBe(USERNAME)        
+        const query = loginPersonQuery('invalid username', PASSWORD)
+        const response = await performTestServerQuery(testServer, query) as Response
+        const responseData = (response.body as unknown as LoginPersonResponseType).data.loginPerson
+        expect(responseData.code).toBe('400')
+        expect(responseData.success).toBe(false)
+        expect(responseData.message).toBe(LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD)
+        expect(responseData.username).toBeNull()
+        expect(responseData.facebookName).toBeNull()
+        expect(responseData.jwtToken).toBeNull()
+    })
+
+    test('given invalid password, a person cannot login', async () => {
+        const personToAdd = new Person({ username: USERNAME, passwordHash: PASSWORDHASH })
+        await personToAdd.save()
+        const person = await Person.findOne({ username: USERNAME }) as { username: string}
+        expect(person.username).toBe(USERNAME)        
+        const query = loginPersonQuery(USERNAME, 'invalid password')
+        const response = await performTestServerQuery(testServer, query) as Response
+        const responseData = (response.body as unknown as LoginPersonResponseType).data.loginPerson
+        expect(responseData.code).toBe('400')
+        expect(responseData.success).toBe(false)
+        expect(responseData.message).toBe(LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD)
+        expect(responseData.username).toBeNull()
+        expect(responseData.facebookName).toBeNull()
+        expect(responseData.jwtToken).toBeNull()
+    })
+
+    test('given person is authorized, person can remove him or herself from database (username)', async () => {
+        const personToAdd = new Person({ username: USERNAME, passwordHash: PASSWORDHASH })
+        await personToAdd.save()
+        const personsBefore = await Person.find({ username: USERNAME })
+        expect(personsBefore.length).toBe(1)
+        const queryLogin = loginPersonQuery(USERNAME, PASSWORD)
+        const responseLogin = await performTestServerQuery(testServer, queryLogin) as Response
+        const responseLoginData = (responseLogin.body as unknown as LoginPersonResponseType).data.loginPerson
+        const token = responseLoginData.jwtToken as string
+        const queryRemove = removePersonQuery()
+        const responseRemove = await performAuthorizedTestServerQuery(testServer, queryRemove, token) as Response
+        const responseRemoveData = (responseRemove.body as unknown as RemovePersonResponseType).data.removePerson
+        expect(responseRemoveData.code).toBe('200')
+        expect(responseRemoveData.success).toBe(true)
+        expect(responseRemoveData.message).toBe(REMOVE_PERSON_SUCCESS)
+        expect(responseRemoveData.username).toBe(USERNAME)
+        expect(responseRemoveData.facebookName).toBeNull()
+        const personsAfter = await Person.find({ username: USERNAME })
+        expect(personsAfter.length).toBe(0)
+    })
+
+
+    test('given person is authorized, person can remove him or herself from database (facebook name)', async () => {
+        const personToAdd = new Person({ facebookId: FACEBOOK_ID, facebookName: FACEBOOK_NAME })
+        const createdPerson = await personToAdd.save()
+        // Token is artificially created here because mocking node-fetch does not work with GraphQL queries.
+        const JWT_TOKEN_FACEBOOK = jwt.sign({ id: createdPerson._id, facebookName: FACEBOOK_NAME }, configurations.JWT_SECRET)
+        const personsBefore = await Person.find({ facebookId: FACEBOOK_ID })
+        expect(personsBefore.length).toBe(1)
+        const queryRemove = removePersonQuery()
+        const responseRemove = await performAuthorizedTestServerQuery(testServer, queryRemove, JWT_TOKEN_FACEBOOK) as Response
+        const responseRemoveData = (responseRemove.body as unknown as RemovePersonResponseType).data.removePerson
+        expect(responseRemoveData.code).toBe('200')
+        expect(responseRemoveData.success).toBe(true)
+        expect(responseRemoveData.message).toBe(REMOVE_PERSON_SUCCESS)
+        expect(responseRemoveData.username).toBeNull()
+        expect(responseRemoveData.facebookName).toBe(FACEBOOK_NAME)
+        const personsAfter = await Person.find({ facebookId: FACEBOOK_ID })
+        expect(personsAfter.length).toBe(0)
+    })
 
     afterAll(async () => {
         await mongoose.connection.close()
