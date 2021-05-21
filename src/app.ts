@@ -3,7 +3,7 @@ import express from 'express'
 import { ApolloServer } from 'apollo-server-express'
 import typeDefsAndResolversCombined from './graphql-schema/combine-schemas/typeDefsAndResolversCombined'
 import Person from './mongoose-schema/person'
-// import Item from './mongoose-schema/item'
+import Item from './mongoose-schema/item'
 // import Discussion from './mongoose-schema/discussion'
 import imageRouter from './routes/images/imageRouter'
 import { authenticationGraphQL } from './utils/authenticationGraphQL'
@@ -31,7 +31,8 @@ const server = new ApolloServer({
         const authenticatedPerson: IPerson | undefined = await authenticationGraphQL(req)
         return { 
             Person, 
-            // Item, Discussion, 
+            Item, 
+            //Discussion, 
             authenticatedPerson 
         }
     }

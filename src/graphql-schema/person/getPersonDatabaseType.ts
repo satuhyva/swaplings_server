@@ -7,7 +7,8 @@ export const getPersonDatabaseType = (personToConvert: IPerson): PersonDatabaseT
     return {
         id: personToConvert._id, 
         username: personToConvert.username, 
-        passwordHash: personToConvert.passwordHash, 
+        facebookId: personToConvert.facebookId,
+        facebookName: personToConvert.facebookName,
         email: personToConvert.email ,
         ownedItemdIds: personToConvert.ownedItemIds,
     }

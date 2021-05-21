@@ -1,18 +1,17 @@
 import { Model } from 'mongoose'
-import { IPerson } from '../../mongoose-schema/person'
-import { SignUpPersonInputType } from '../../types/person/SignUpPersonInputType'
+import { IPerson } from '../../../mongoose-schema/person'
+import { SignUpPersonInputType } from '../../../types/person/SignUpPersonInputType'
 import bcryptjs from 'bcryptjs'
-import { LoginSignUpResponseType } from '../../types/person/LoginSignUpResponseType'
-import { MongoError } from 'mongodb'
+import { LoginSignUpResponseType } from '../../../types/person/LoginSignUpResponseType'
 import jwt from 'jsonwebtoken'
-import configurations from '../../utils/configurations'
-import { TokenContentType } from '../../types/authentication/TokenContentType'
+import configurations from '../../../utils/configurations'
+import { TokenContentType } from '../../../types/authentication/TokenContentType'
 import { 
     SIGNUP_EMAIL_ALREADY_IN_USE,
     SIGNUP_SUCCESS,
     SIGNUP_USERNAME_ALREADY_IN_USE,
     SIGNUP_ERROR_DATABASE
- } from './errorMessages'
+ } from '../helpers/errorMessages'
 
 
 
@@ -30,10 +29,24 @@ export const signUpPersonService = async (
                 code: '400',
                 success: false,
                 message: SIGNUP_EMAIL_ALREADY_IN_USE,
+                id: undefined,
                 username: undefined, 
                 facebookName: undefined, 
                 jwtToken: undefined 
             }
+        }
+    }
+
+    const existingPersonWithUsername = await Person.find({ username: username })
+    if (existingPersonWithUsername.length > 0) {
+        return {
+            code: '400',
+            success: false,
+            message: SIGNUP_USERNAME_ALREADY_IN_USE,
+            id: undefined,
+            username: undefined, 
+            facebookName: undefined, 
+            jwtToken: undefined 
         }
     }
 
@@ -48,14 +61,11 @@ export const signUpPersonService = async (
         signingUpPerson = await personToAdd.save()
         if (!signingUpPerson) throw new Error()
     } catch (error) {
-        let message = SIGNUP_ERROR_DATABASE
-        if ((error as MongoError).message.includes('duplicate key')) {
-            message = SIGNUP_USERNAME_ALREADY_IN_USE
-        }
         return {
             code: '400',
             success: false,
-            message: message,
+            message: SIGNUP_ERROR_DATABASE,
+            id: undefined,
             username: undefined, 
             facebookName: undefined, 
             jwtToken: undefined 
@@ -63,7 +73,9 @@ export const signUpPersonService = async (
         
     }
 
-    let tokenContent: TokenContentType = { id: signingUpPerson._id }
+    const expiryTime = new Date()
+    expiryTime.setHours(expiryTime.getHours() + 1)
+    let tokenContent: TokenContentType = { id: signingUpPerson._id, expires: expiryTime.toISOString() }
     if (signingUpPerson.username) tokenContent = { ...tokenContent, username: signingUpPerson.username }
     const token = jwt.sign(tokenContent, configurations.JWT_SECRET)
         
@@ -71,6 +83,7 @@ export const signUpPersonService = async (
         code: '200',
         success: true,
         message: SIGNUP_SUCCESS,
+        id: signingUpPerson._id,
         username: username, 
         facebookName: undefined, 
         jwtToken: token 

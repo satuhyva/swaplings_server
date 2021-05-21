@@ -11,4 +11,5 @@ export type ItemDatabaseType = {
     matchedFromIds: string[],
     image_public_id?: string,
     image_secure_url?: string,
+    brand?: string, 
 }

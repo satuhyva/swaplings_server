@@ -2,10 +2,17 @@ import supertest from 'supertest'
 import app from '../app'
 const testServer = supertest(app)
 import { performTestServerQuery } from './queries'
-
-
+import { stopServer } from '../../index'
+import mongoose from 'mongoose'
+    
 
 describe('SERVER', () => {
+
+    afterAll(async () => {
+        await mongoose.connection.close()
+        stopServer()
+    })
+
 
     test('can be started and a REST GET request to "/health" results in an "OK" response', async () => {
         const response = await testServer

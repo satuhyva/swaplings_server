@@ -10,12 +10,12 @@ import {
 import { connectToMongooseDatabase } from '../../index'
 import mongoose from 'mongoose'
 import { clearTestDatabase } from './clearTestDatabase'
-import { SIGNUP_SUCCESS, LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS, REMOVE_PERSON_SUCCESS } from '../graphql-schema/person/errorMessages'
+import { SIGNUP_SUCCESS, LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS, REMOVE_PERSON_SUCCESS } from '../graphql-schema/person/helpers/errorMessages'
 import {
     INVALID_USERNAME, INVALID_PASSWORD, INVALID_EMAIL
 } from '../graphql-schema/custom-scalars/errorMessages'
 import Person from '../mongoose-schema/person'
-import { LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD } from '../graphql-schema/person/errorMessages'
+import { LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD } from '../graphql-schema/person/helpers/errorMessages'
 import {
     SignUpPersonResponseType,
     LoginPersonResponseType,
@@ -25,7 +25,7 @@ import {
 import { USERNAME, PASSWORD, PASSWORDHASH, EMAIL, FACEBOOK_ID, FACEBOOK_NAME } from './constants'
 import jwt from 'jsonwebtoken'
 import configurations from '../utils/configurations'
-
+import { stopServer } from '../../index'
 
 
 const testServer = supertest(app)
@@ -44,6 +44,12 @@ describe('PERSON', () => {
     })
 
 
+    afterAll(async () => {
+        await mongoose.connection.close()
+        stopServer()
+    })
+
+    
     test('given proper username, password and email, person can sign up', async () => {
         const query = signUpPersonQuery(USERNAME, PASSWORD, EMAIL)
         const response = await performTestServerQuery(testServer, query) as Response
@@ -55,6 +61,7 @@ describe('PERSON', () => {
         expect(signedUpPerson.username).toBe(USERNAME)
         expect(signedUpPerson.facebookName).toBeNull()
         expect(signedUpPerson.jwtToken).toBeDefined()
+        expect(signedUpPerson.id).toBeDefined()
         const person = await Person.findOne({ username: USERNAME }) as { username: string}
         expect(person.username).toBe(USERNAME)
     })
@@ -70,6 +77,7 @@ describe('PERSON', () => {
         expect(signedUpPerson.username).toBe(USERNAME)
         expect(signedUpPerson.facebookName).toBeNull()
         expect(signedUpPerson.jwtToken).toBeDefined()
+        expect(signedUpPerson.id).toBeDefined()
         const person = await Person.findOne({ username: USERNAME }) as { username: string}
         expect(person.username).toBe(USERNAME)
     })
@@ -127,6 +135,7 @@ describe('PERSON', () => {
         expect(loggedInPerson.username).toBe(USERNAME)
         expect(loggedInPerson.facebookName).toBeNull()
         expect(loggedInPerson.jwtToken).toBeDefined()
+        expect(loggedInPerson.id).toBeDefined()
         const person = await Person.findOne({ username: USERNAME }) as { username: string}
         expect(person.username).toBe(USERNAME)
     })
@@ -145,6 +154,7 @@ describe('PERSON', () => {
         expect(responseData.username).toBeNull()
         expect(responseData.facebookName).toBeNull()
         expect(responseData.jwtToken).toBeNull()
+        expect(responseData.id).toBeNull()
     })
 
     test('given invalid password, a person cannot login', async () => {
@@ -161,6 +171,7 @@ describe('PERSON', () => {
         expect(responseData.username).toBeNull()
         expect(responseData.facebookName).toBeNull()
         expect(responseData.jwtToken).toBeNull()
+        expect(responseData.id).toBeNull()
     })
 
     test('given person is authorized, person can remove him or herself from database (username)', async () => {
@@ -180,6 +191,7 @@ describe('PERSON', () => {
         expect(responseRemoveData.message).toBe(REMOVE_PERSON_SUCCESS)
         expect(responseRemoveData.username).toBe(USERNAME)
         expect(responseRemoveData.facebookName).toBeNull()
+        expect(responseRemoveData.id).toBeDefined()
         const personsAfter = await Person.find({ username: USERNAME })
         expect(personsAfter.length).toBe(0)
     })
@@ -189,7 +201,9 @@ describe('PERSON', () => {
         const personToAdd = new Person({ facebookId: FACEBOOK_ID, facebookName: FACEBOOK_NAME })
         const createdPerson = await personToAdd.save()
         // Token is artificially created here because mocking node-fetch does not work with GraphQL queries.
-        const JWT_TOKEN_FACEBOOK = jwt.sign({ id: createdPerson._id, facebookName: FACEBOOK_NAME }, configurations.JWT_SECRET)
+        const expiryTime = new Date()
+        expiryTime.setHours(expiryTime.getHours() + 1)
+        const JWT_TOKEN_FACEBOOK = jwt.sign({ id: createdPerson._id, facebookName: FACEBOOK_NAME, expires: expiryTime.toISOString() }, configurations.JWT_SECRET)
         const personsBefore = await Person.find({ facebookId: FACEBOOK_ID })
         expect(personsBefore.length).toBe(1)
         const queryRemove = removePersonQuery()
@@ -200,13 +214,11 @@ describe('PERSON', () => {
         expect(responseRemoveData.message).toBe(REMOVE_PERSON_SUCCESS)
         expect(responseRemoveData.username).toBeNull()
         expect(responseRemoveData.facebookName).toBe(FACEBOOK_NAME)
+        expect(responseRemoveData.id).toBeDefined()
         const personsAfter = await Person.find({ facebookId: FACEBOOK_ID })
         expect(personsAfter.length).toBe(0)
     })
 
-    afterAll(async () => {
-        await mongoose.connection.close()
-    })
 
 })
 

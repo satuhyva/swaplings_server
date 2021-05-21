@@ -1,5 +1,5 @@
-import { IItem } from '../../mongoose-schema/item'
-import { ItemDatabaseType } from '../../types/item/ItemDatabaseType'
+import { IItem } from '../../../mongoose-schema/item'
+import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
 
 
 
@@ -13,6 +13,7 @@ export const getItemDatabaseType = (itemToConvert: IItem): ItemDatabaseType => {
         matchedToIds: itemToConvert.matchedToIds,
         matchedFromIds: itemToConvert.matchedFromIds,
         image_public_id: itemToConvert.image_public_id,
-        image_secure_url: itemToConvert.image_secure_url
+        image_secure_url: itemToConvert.image_secure_url,
+        brand: itemToConvert.brand,
     }
 }

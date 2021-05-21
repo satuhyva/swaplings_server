@@ -1,15 +1,16 @@
-import { LoginSignUpResponseType } from '../../types/person/LoginSignUpResponseType'
-import { LoginPersonInputType } from '../../types/person/LoginPersonInputType'
+import { LoginSignUpResponseType } from '../../../types/person/LoginSignUpResponseType'
+import { LoginPersonInputType } from '../../../types/person/LoginPersonInputType'
 import { Model } from 'mongoose'
-import { IPerson } from '../../mongoose-schema/person'
+import { IPerson } from '../../../mongoose-schema/person'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import configurations from '../../utils/configurations'
-import { TokenContentType } from '../../types/authentication/TokenContentType'
+import configurations from '../../../utils/configurations'
+import { TokenContentType } from '../../../types/authentication/TokenContentType'
 import {  
     LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD,
     LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS
- } from './errorMessages'
+ } from '../helpers/errorMessages'
+
 
 
 
@@ -28,13 +29,16 @@ export const loginPersonService = async (loginInput: LoginPersonInputType, Perso
             code: '400',
             success: false,
             message: LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD,
+            id: undefined,
             username: undefined, 
             facebookName: undefined, 
             jwtToken: undefined 
         }
     }
 
-    let tokenContent: TokenContentType = { id: loggingInPerson._id }
+    const expiryTime = new Date()
+    expiryTime.setHours(expiryTime.getHours() + 1)
+    let tokenContent: TokenContentType = { id: loggingInPerson._id, expires: expiryTime.toISOString()  }
     if (loggingInPerson.username) tokenContent = { ...tokenContent, username: loggingInPerson.username }
     const token = jwt.sign(tokenContent, configurations.JWT_SECRET)
 
@@ -42,6 +46,7 @@ export const loginPersonService = async (loginInput: LoginPersonInputType, Perso
         code: '200',
         success: true,
         message: LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS,
+        id: loggingInPerson._id,
         username: username, 
         facebookName: undefined, 
         jwtToken: token 

@@ -1,21 +1,19 @@
 import { gql } from 'apollo-server-express'
-// import { PersonDatabaseType } from '../../types/person/PersonDatabaseType'
 import { Model } from 'mongoose'
-import { IPerson } from '../../mongoose-schema/person'
-// import { IItem } from '../../mongoose-schema/item'
-// import { ItemDatabaseType } from '../../types/item/ItemDatabaseType'
-import { SignUpPersonInputType } from '../../types/person/SignUpPersonInputType'
-import { signUpPersonService } from './signUpPersonService'
-// import { allPersonsInDatabaseService } from './allPersonsInDatabaseService'
-// import { privatePersonByUsernameService } from './privatePersonByUsernameService'
-// import { ownedItemsService } from './ownedItemsService'
-import { LoginSignUpResponseType } from '../../types/person/LoginSignUpResponseType'
-import { LoginPersonInputType } from '../../types/person/LoginPersonInputType'
-import { loginPersonService } from './loginPersonService'
-import { loginPersonWithFacebookService } from './loginPersonWithFacebookService'
-import { FacebookInputType } from '../../types/person/FacebookInputType'
-import { RemovePersonType } from '../../types/person/RemovePersonType'
-import { removePersonService } from './removePersonService'
+import { IPerson } from '../../../mongoose-schema/person'
+import { SignUpPersonInputType } from '../../../types/person/SignUpPersonInputType'
+import { signUpPersonService } from '../services/signUpPersonService'
+import { LoginSignUpResponseType } from '../../../types/person/LoginSignUpResponseType'
+import { LoginPersonInputType } from '../../../types/person/LoginPersonInputType'
+import { loginPersonService } from '../services/loginPersonService'
+import { loginPersonWithFacebookService } from '../services/loginPersonWithFacebookService'
+import { FacebookInputType } from '../../../types/person/FacebookInputType'
+import { RemovePersonType } from '../../../types/person/RemovePersonType'
+import { removePersonService } from '../services/removePersonService'
+import { IItem } from '../../../mongoose-schema/item'
+import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
+import { PersonDatabaseType } from '../../../types/person/PersonDatabaseType'
+import { ownedItemsService } from '../services/ownedItemsService'
 
 
 const typeDefs = gql`
@@ -40,6 +38,7 @@ const typeDefs = gql`
         code: String!
         success: Boolean!
         message: String!
+        id: ID
         username: String
         facebookName: String
         jwtToken: String
@@ -49,8 +48,18 @@ const typeDefs = gql`
         code: String!
         success: Boolean!
         message: String!
+        id: ID
         username: String
         facebookName: String
+    }
+
+    type Person {
+        id: ID!
+        username: String
+        email: String
+        facebookId: String
+        facebookName: String
+        ownedItems: [Item]
     }
 
     # type PrivatePerson {
@@ -119,14 +128,14 @@ const resolvers = {
 
     },
 
-    // PrivatePerson: {
+    Person: {
 
-    //     ownedItems: async (root: PersonDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
-    //         const items = await ownedItemsService(root.id, context.Item)
-    //         return items
-    //     },
+        ownedItems: async (root: PersonDatabaseType, _args: void, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<null | ItemDatabaseType[]> => {
+            const items = await ownedItemsService(context.authenticatedPerson, root.id, context.Item)
+            return items
+        },
         
-    // },
+    },
 
 
 }

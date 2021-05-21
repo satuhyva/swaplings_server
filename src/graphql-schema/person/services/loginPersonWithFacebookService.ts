@@ -1,12 +1,13 @@
-import { LoginSignUpResponseType } from '../../types/person/LoginSignUpResponseType'
+import { LoginSignUpResponseType } from '../../../types/person/LoginSignUpResponseType'
 import { Model } from 'mongoose'
-import { IPerson } from '../../mongoose-schema/person'
+import { IPerson } from '../../../mongoose-schema/person'
 import jwt from 'jsonwebtoken'
-import configurations from '../../utils/configurations'
-import { TokenContentType } from '../../types/authentication/TokenContentType'
-import { LOGIN_FACEBOOK_DATABASE_ERROR, LOGIN_FACEBOOK_GRAPH_API_ERROR, LOGIN_FACEBOOK_SUCCESS } from './errorMessages'
-import { FacebookInputType } from '../../types/person/FacebookInputType'
+import configurations from '../../../utils/configurations'
+import { TokenContentType } from '../../../types/authentication/TokenContentType'
+import { LOGIN_FACEBOOK_DATABASE_ERROR, LOGIN_FACEBOOK_GRAPH_API_ERROR, LOGIN_FACEBOOK_SUCCESS } from '../helpers/errorMessages'
+import { FacebookInputType } from '../../../types/person/FacebookInputType'
 import fetch from 'node-fetch'
+
 
 export type FacebookGraphAPIResponseType = {
     id: string, 
@@ -37,6 +38,7 @@ export const loginPersonWithFacebookService = async (facebookLoginInput: Faceboo
             code: '400',
             success: false,
             message: LOGIN_FACEBOOK_GRAPH_API_ERROR,
+            id: undefined,
             username: undefined, 
             facebookName: undefined, 
             jwtToken: undefined 
@@ -59,14 +61,16 @@ export const loginPersonWithFacebookService = async (facebookLoginInput: Faceboo
             code: '400',
             success: false,
             message: LOGIN_FACEBOOK_DATABASE_ERROR,
+            id: undefined,
             username: undefined, 
             facebookName: undefined, 
             jwtToken: undefined 
         }
     }
 
-
-    let tokenContent: TokenContentType = { id: loggingInPerson._id }
+    const expiryTime = new Date()
+    expiryTime.setHours(expiryTime.getHours() + 1)
+    let tokenContent: TokenContentType = { id: loggingInPerson._id, expires: expiryTime.toISOString() }
     if (loggingInPerson.facebookName) tokenContent = { ...tokenContent, facebookName: personData.name }
     const token = jwt.sign(tokenContent, configurations.JWT_SECRET)
 
@@ -74,6 +78,7 @@ export const loginPersonWithFacebookService = async (facebookLoginInput: Faceboo
         code: '200',
         success: true,
         message: LOGIN_FACEBOOK_SUCCESS,
+        id: loggingInPerson._id,
         facebookName: personData.name, 
         jwtToken: token 
     }

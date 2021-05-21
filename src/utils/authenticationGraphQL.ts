@@ -16,7 +16,8 @@ export const authenticationGraphQL = async (request: RequestWithAuthorization): 
     if (authentication) {
         const decodedToken = jwt.verify(authentication, configurations.JWT_SECRET)
         const tokenContent = decodedToken as unknown as TokenContentType
-        if (!tokenContent.id || (!tokenContent.username && !tokenContent.facebookName)) throw new ApolloError(AUTHENTICATION_FAILED)
+        const hasNotExpired = !!tokenContent.expires && new Date(tokenContent.expires) > new Date()
+        if (hasNotExpired && !tokenContent.id || (!tokenContent.username && !tokenContent.facebookName)) throw new ApolloError(AUTHENTICATION_FAILED)
 
         const person: IPerson | null = await Person.findById(tokenContent.id)
         if (!person) throw new ApolloError(AUTHENTICATION_FAILED)

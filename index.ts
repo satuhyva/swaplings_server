@@ -1,6 +1,7 @@
 import app from './src/app'
 import configurations from './src/utils/configurations'
 import mongoose from 'mongoose'
+import { Server } from 'node:http'
 
 
 
@@ -18,10 +19,14 @@ export const connectToMongooseDatabase = async (): Promise<void> => {
     }
 }
 
+let server: Server
+
 const startServer = () => {
     try {
-        app.listen({ port: configurations.PORT }, () => {
-            console.log('Swaplings server ready at PORT', configurations.PORT)
+        server = app.listen({ port: configurations.PORT }, () => {
+            if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'production') {
+                console.log('Swaplings server ready at PORT', configurations.PORT)
+            }
         })
     } catch (error) {
         console.log('Error in starting the server', error)
@@ -35,6 +40,9 @@ const connectToDatabaseAndStartServer = async () => {
     startServer()
 }
 
+export const stopServer = (): void => {
+    server.close()
+}
 
 
 void connectToDatabaseAndStartServer()

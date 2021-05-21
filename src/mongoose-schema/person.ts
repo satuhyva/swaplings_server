@@ -15,22 +15,21 @@ export interface IPerson extends Document {
     __v: number,
 }
 
+// Unique requirements are not added because several nulls are not allowed! 
+// The fix does not work.
 
 const PersonSchema: Schema = new Schema({
     username: {
         type: String,
-        unique: true,
     },
     passwordHash: {
         type: String,
     },
     email: {
         type: String,
-        unique: true,
     },
     facebookId: {
         type: String,
-        unique: true,
     },
     facebookName: {
         type: String,

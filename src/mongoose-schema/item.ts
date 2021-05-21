@@ -13,6 +13,7 @@ export interface IItem extends Document {
     matchedFromIds: IItem['_id'][],
     image_public_id: string | undefined,
     image_secure_url: string | undefined,
+    brand: string | undefined,
     __v: number,
 }
 
@@ -51,6 +52,9 @@ const ItemSchema: Schema = new Schema({
         type: String,
     },
     image_secure_url: {
+        type: String,
+    },
+    brand: {
         type: String,
     },
     

@@ -1,0 +1,5 @@
+export const NOT_AUTHORIZED_TO_ADD_ITEM = 'Not authorized to add an item.'
+export const OWNER_NOT_FOUND_IN_DATABASE = 'Owner person could not be found in database.'
+export const ERROR_SAVING_ITEM_TO_DATABASE = 'Error in saving new item to database.'
+export const SUCCESS_ADD_ITEM = 'Successfully added new item.'
+export const ERROR_ADDING_ITEM = 'Error adding item.'

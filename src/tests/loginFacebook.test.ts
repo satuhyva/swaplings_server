@@ -1,13 +1,13 @@
 import { connectToMongooseDatabase } from '../../index'
 import mongoose from 'mongoose'
 import { clearTestDatabase } from './clearTestDatabase'
-import { LOGIN_FACEBOOK_SUCCESS, LOGIN_FACEBOOK_GRAPH_API_ERROR } from '../graphql-schema/person/errorMessages'
+import { LOGIN_FACEBOOK_SUCCESS, LOGIN_FACEBOOK_GRAPH_API_ERROR } from '../graphql-schema/person/helpers/errorMessages'
 import fetch from 'node-fetch'
 import { mocked } from 'ts-jest/utils'
-import { loginPersonWithFacebookService } from '../graphql-schema/person/loginPersonWithFacebookService'
+import { loginPersonWithFacebookService } from '../graphql-schema/person/services/loginPersonWithFacebookService'
 import Person from '../mongoose-schema/person'
 import { FACEBOOK_ID, FACEBOOK_NAME, FACEBOOK_ACCESS_TOKEN } from './constants'
-
+import { stopServer } from '../../index'
 
 
 // The GraphQL queries do not work when node-fetch is mocked.
@@ -53,6 +53,7 @@ describe('FACEBOOK LOGIN / SIGNUP', () => {
         expect(response.username).toBeUndefined()
         expect(response.facebookName).toBe(FACEBOOK_NAME)
         expect(response.jwtToken).toBeDefined()
+        expect(response.id).toBeDefined()
         const person = await Person.findOne({ facebookId: FACEBOOK_ID }) as { facebookName: string}
         expect(person.facebookName).toBe(FACEBOOK_NAME)
     })
@@ -71,6 +72,7 @@ describe('FACEBOOK LOGIN / SIGNUP', () => {
         expect(response.username).toBeUndefined()
         expect(response.facebookName).toBe(FACEBOOK_NAME)
         expect(response.jwtToken).toBeDefined()
+        expect(response.id).toBeDefined()
     })
 
     test('given invalid Facebook userId, a person cannot sign up', async () => {
@@ -82,6 +84,7 @@ describe('FACEBOOK LOGIN / SIGNUP', () => {
         expect(response.username).toBeUndefined()
         expect(response.facebookName).toBeUndefined()
         expect(response.jwtToken).toBeUndefined()
+        expect(response.id).toBeUndefined()
         const persons = await Person.find({ facebookId: FACEBOOK_ID })
         expect(persons.length).toBe(0)
     })
@@ -99,10 +102,12 @@ describe('FACEBOOK LOGIN / SIGNUP', () => {
         expect(response.username).toBeUndefined()
         expect(response.facebookName).toBeUndefined()
         expect(response.jwtToken).toBeUndefined()
+        expect(response.id).toBeUndefined()
     })
 
     afterAll(async () => {
         await mongoose.connection.close()
+        stopServer()
     })
 
 })
