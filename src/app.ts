@@ -8,10 +8,11 @@ import Item from './mongoose-schema/item'
 import imageRouter from './routes/images/imageRouter'
 import { authenticationGraphQL } from './utils/authenticationGraphQL'
 import { IPerson } from './mongoose-schema/person'
-
+import cors from 'cors'
 
 
 const app = express()
+app.use(cors())
 
 app.use(express.urlencoded())
 

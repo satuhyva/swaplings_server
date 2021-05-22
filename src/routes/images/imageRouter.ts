@@ -23,6 +23,7 @@ const imageRouter = Router()
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 imageRouter.post('/', multerUploads,  async (request, response) => {
+    console.log('UPLOADING IMAGE')
     if (!request.file) throw new Error('Image file is missing!')
     const buffer = request.file.buffer
     const dataUriParser = new DatauriParser()

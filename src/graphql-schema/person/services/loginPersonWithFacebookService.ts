@@ -80,7 +80,8 @@ export const loginPersonWithFacebookService = async (facebookLoginInput: Faceboo
         message: LOGIN_FACEBOOK_SUCCESS,
         id: loggingInPerson._id,
         facebookName: personData.name, 
-        jwtToken: token 
+        jwtToken: token,
+        username: undefined 
     }
 
 }
