@@ -12,8 +12,8 @@ export const getItemDatabaseType = (itemToConvert: IItem): ItemDatabaseType => {
         ownerPersonId: itemToConvert.ownerPersonId,
         matchedToIds: itemToConvert.matchedToIds,
         matchedFromIds: itemToConvert.matchedFromIds,
-        image_public_id: itemToConvert.image_public_id,
-        image_secure_url: itemToConvert.image_secure_url,
+        imagePublicId: itemToConvert.imagePublicId,
+        imageSecureUrl: itemToConvert.imageSecureUrl,
         brand: itemToConvert.brand,
     }
 }

@@ -27,10 +27,10 @@ export const addItemService = async (
 
         const personId = authenticatedPerson._id
 
-        const { title, priceGroup, description, image_public_id, image_secure_url, brand } = itemInput
+        const { title, priceGroup, description, imagePublicId, imageSecureUrl, brand } = itemInput
         let itemData: AddItemInputType = { title: title, priceGroup: priceGroup, description: description } 
-        if (image_public_id) itemData = { ...itemData, image_public_id: image_public_id }
-        if (image_secure_url) itemData = { ...itemData, image_secure_url: image_secure_url }
+        if (imagePublicId) itemData = { ...itemData, imagePublicId: imagePublicId }
+        if (imageSecureUrl) itemData = { ...itemData, imageSecureUrl: imageSecureUrl }
         if (brand) itemData = { ...itemData, brand: brand }
         const newItem = new Item({ ...itemData, ownerPersonId: personId })
 

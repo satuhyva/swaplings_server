@@ -9,7 +9,7 @@ export type ItemDatabaseType = {
     ownerPersonId: string,
     matchedToIds: string[],
     matchedFromIds: string[],
-    image_public_id?: string,
-    image_secure_url?: string,
+    imagePublicId?: string,
+    imageSecureUrl?: string,
     brand?: string, 
 }

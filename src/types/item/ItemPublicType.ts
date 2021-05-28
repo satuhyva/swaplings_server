@@ -7,6 +7,6 @@ export type ItemPublicType = {
     description: string,
     priceGroup: PriceGroupEnum,
     brand?: string, 
-    image_public_id?: string,
-    image_secure_url?: string,
+    imagePublicId?: string,
+    imageSecureUrl?: string,
 }

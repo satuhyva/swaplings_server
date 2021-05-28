@@ -11,6 +11,11 @@ import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
 import { myItemsService } from '../services/myItemsService'
 import { matchedToOrFromService } from '../services/matchedToOrFromService'
 import { ItemPublicType } from '../../../types/item/ItemPublicType'
+import { AddMatchInputType } from '../../../types/item/AddMatchInputType'
+import { AddMatchResponseType } from '../../../types/item/AddMatchResponseType'
+import { addMatchService } from '../services/addMatchService'
+import { BrowseItemsInputType } from '../../../types/item/BrowseItemsInputType'
+import { browseItemsService } from '../services/browseItemsService'
 
 
 const typeDefs = gql`
@@ -20,8 +25,20 @@ const typeDefs = gql`
         priceGroup: PriceGroup! 
         description: String! 
         brand: String
-        image_public_id: String
-        image_secure_url: String
+        imagePublicId: String
+        imageSecureUrl: String
+    }
+
+    input AddMatchInput {
+        myItemId: ID!
+        itemToId: ID!
+    }
+
+    input BrowseItemsInput {
+        priceGroups: [PriceGroup]
+        phrasesInTitle: [String]
+        phrasesInDescription: [String]
+        brands: [String]
     }
 
     type Item {
@@ -30,8 +47,8 @@ const typeDefs = gql`
         priceGroup: PriceGroup! 
         description: String! 
         brand: String
-        image_public_id: String
-        image_secure_url: String
+        imagePublicId: String
+        imageSecureUrl: String
         owner: Person!
         matchedTo: [Item]
         matchedFrom: [Item]
@@ -44,16 +61,23 @@ const typeDefs = gql`
         item: Item
     }
 
+    type AddMatchResponse implements MutationResponse {
+        code: String!
+        success: Boolean!
+        message: String!
+        myItem: Item
+    }
+
+
     extend type Query {
         myItems: [Item]
+        browseItems(browseItemsInput: BrowseItemsInput!): [Item]
     }  
 
     extend type Mutation {
         addItem(addItemInput: AddItemInput!): AddItemResponse
-        # addNewItemToPerson(itemInput: AddNewItemToPersonInput!): PrivateItem
-        # addItemMatch(targetItemId: ID!, interestedItemId: ID!): Boolean
+        addMatch(addMatchInput: AddMatchInput): AddMatchResponse
         # cancelItemMatch(cancellingItemId: ID!, matchedItemId: ID!): Boolean
-        # setItemImage(itemId: ID!, image_public_id: String!, image_secure_url: String!): Boolean
         # discussItem(itemFromId: ID!, itemToId: ID!, username: String!, content: String!): Boolean
         # markItemAsSwapped: kumpikin osapuoli osaltaan voi merkitä, että on swapped, silloin häviää henkilöltä näkyvistä
         # kun toinenkin merkitsee swapped, silloin poistuu molemmat itemit ja kaikki keskustelut
@@ -68,9 +92,12 @@ const resolvers = {
     Query: {
       
       myItems: async (_root: void, _args: void, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
-        const items = await myItemsService(context.authenticatedPerson, context.Item)
-        return items
-      }  
+        return await myItemsService(context.authenticatedPerson, context.Item)
+      },
+
+      browseItems: async (_root: void, args: { browseItemsInput: BrowseItemsInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<ItemPublicType[]> => {
+        return await browseItemsService(context.authenticatedPerson, context.Item, args.browseItemsInput)
+      }
 
     },
 
@@ -81,8 +108,13 @@ const resolvers = {
             args: { addItemInput: AddItemInputType }, 
             context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
             ): Promise<AddItemResponseType> => {
-                const addedItemResponse = await addItemService(context.authenticatedPerson, context.Person, context.Item, args.addItemInput)
-                return addedItemResponse
+                return await addItemService(context.authenticatedPerson, context.Person, context.Item, args.addItemInput)
+        },
+
+        addMatch: async (_root: void, args: { addMatchInput: AddMatchInputType }, 
+            context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
+            ): Promise<AddMatchResponseType> => {
+                return await addMatchService(context.authenticatedPerson, context.Item, args.addMatchInput)
         }
 
     },
@@ -90,18 +122,15 @@ const resolvers = {
     Item: {
 
         owner: async (root: ItemDatabaseType, _args: void, context: { Person: Model<IPerson> }): Promise<PersonDatabaseType> => {
-            const person = await getPersonService(root.ownerPersonId, context.Person)
-            return person
+            return await getPersonService(root.ownerPersonId, context.Person)
         },
 
         matchedTo: async (root: ItemDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<ItemPublicType[]> => {
-            const items = await matchedToOrFromService(root.matchedToIds, context.Item)
-            return items
+            return await matchedToOrFromService(root.matchedToIds, context.Item)
         },
 
         matchedFrom: async (root: ItemDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<ItemPublicType[]> => {
-            const items = await matchedToOrFromService(root.matchedFromIds, context.Item)
-            return items
+            return await matchedToOrFromService(root.matchedFromIds, context.Item)
         },
 
     }
@@ -117,25 +146,6 @@ const resolvers = {
 
     // Mutation: {
 
-        // addItemMatch: async (_root: void, args: { targetItemId: string, interestedItemId: string }, context: { Item: Model<IItem> }): Promise<boolean> => {
-        //     const { Item } = context
-        //     const interestedItem: IItem | null = await Item.findById(args.interestedItemId)
-        //     const targetItem: IItem | null = await Item.findById(args.targetItemId)
-
-        //     if (!interestedItem) throw new ApolloError('Could not find INTERESTED item!')
-        //     if (!targetItem) throw new ApolloError('Could not find TARGET item!')
-        //     if (interestedItem.ownerPersonId.toString() === targetItem.ownerPersonId.toString()) throw new ApolloError('Person cannot match his or her own items with each other!')
-        //     if (targetItem.matchedFromIds.includes(args.interestedItemId)) throw new ApolloError('Items have already been matched in this way!')
-
-        //     interestedItem.matchedToIds = [...interestedItem.matchedToIds, args.targetItemId]
-        //     await interestedItem.save()
-        //     targetItem.matchedFromIds = [...targetItem.matchedFromIds, args.interestedItemId]
-        //     await targetItem.save()
-        //     if (targetItem.matchedToIds.includes(args.interestedItemId)) {
-        //         return true
-        //     }
-        //     return false
-        // },
 
         // cancelItemMatch: async(_root: void, args: { cancellingItemId: string, matchedItemId: string }, context: { Item: Model<IItem> }): Promise<boolean> => {
         //     const { Item } = context
@@ -150,15 +160,6 @@ const resolvers = {
         //     return true
         // },
 
-        // setItemImage: async (_root: void, args: { itemId: string, image_public_id: string, image_secure_url: string }, context: { Item: Model<IItem> }): Promise<boolean> => {
-        //     const { Item } = context
-        //     try {
-        //         await Item.findByIdAndUpdate(args.itemId, { image_public_id: args.image_public_id, image_secure_url: args.image_secure_url }, { new: true })
-        //         return true
-        //     } catch (error) {
-        //         throw new ApolloError('Could not update image data to item. Error:', error)
-        //     }
-        // },
 
         // discussItem: async (
         //     _root: void, 
@@ -189,31 +190,6 @@ const resolvers = {
         //     }
         // }
     // },
-
-    // PrivateItem: {
-
-    //     owner: async (root: ItemDatabaseType, _args: void, context: { Person: Model<IPerson> }): Promise<Omit<PersonDatabaseType, 'passwordHash'>> => {
-    //         const { Person } = context
-    //         const ownerPerson: IPerson | null = await Person.findById(root.ownerPersonId)
-    //         if (!ownerPerson) throw new ApolloError('Could not find person!')
-    //         return { id: ownerPerson._id, username: ownerPerson.username, email: ownerPerson.email, ownedItemdIds: ownerPerson.ownedItemIds }
-    //     },
-
-    //     matchedTo: async (root: ItemDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<ItemPublicDatabaseType[]> => {
-    //         const { Item } = context
-    //         const itemWithMatchedToItems = await Item.findById(root.id).populate('matchedToIds') as unknown as ItemWithMatchedToItemsDatabaseType | null
-    //         if (!itemWithMatchedToItems) throw new ApolloError('Could not find item!')
-    //         return itemWithMatchedToItems.matchedToIds.map(matchedTo => getItemPublicDatabaseType(matchedTo))
-    //     },
-
-    //     matchedFrom: async (root: ItemDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<Omit<ItemDatabaseType, 'ownerPersonId' | 'matchedToIds' | 'matchedFromIds'>[]> => {
-    //         const { Item } = context
-    //         const itemWithMatchedFromItems = await Item.findById(root.id).populate('matchedFromIds') as unknown as ItemWithMatchedFromItemsDatabaseType | null
-    //         if (!itemWithMatchedFromItems) throw new ApolloError('Could not find item!')
-    //         return itemWithMatchedFromItems.matchedFromIds.map(matchedFrom => getItemPublicDatabaseType(matchedFrom))
-    //     },
-
-    // }
 
 
 // }

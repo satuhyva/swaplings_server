@@ -11,8 +11,8 @@ export interface IItem extends Document {
     ownerPersonId: IPerson['_id'],
     matchedToIds: IItem['_id'][],
     matchedFromIds: IItem['_id'][],
-    image_public_id: string | undefined,
-    image_secure_url: string | undefined,
+    imagePublicId: string | undefined,
+    imageSecureUrl: string | undefined,
     brand: string | undefined,
     __v: number,
 }
@@ -48,10 +48,10 @@ const ItemSchema: Schema = new Schema({
             ref: 'Item'
         }
     ],
-    image_public_id: {
+    imagePublicId: {
         type: String,
     },
-    image_secure_url: {
+    imageSecureUrl: {
         type: String,
     },
     brand: {

@@ -3,3 +3,14 @@ export const OWNER_NOT_FOUND_IN_DATABASE = 'Owner person could not be found in d
 export const ERROR_SAVING_ITEM_TO_DATABASE = 'Error in saving new item to database.'
 export const SUCCESS_ADD_ITEM = 'Successfully added new item.'
 export const ERROR_ADDING_ITEM = 'Error adding item.'
+
+export const NOT_AUTHORIZED_TO_ADD_MATCH = 'Not authorized to add match.'
+export const ERROR_FINDING_ITEMS_IN_DATABASE = 'Error finding items in database.'
+export const ERROR_THIS_WAY_MATCH_ALREADY_EXISTS = 'Items have already been matched in this way.'
+export const SUCCESS_ADDING_MATCH = 'Successfully added match.'
+export const ERROR_ADDING_MATCH = 'Error adding match.'
+export const ERROR_NOT_OWNER = 'Error: only item owner can match it to another item.'
+export const ERROR_OWN_TO_ITEM = 'Error: person cannot match his or her item to his or her own other item.'
+
+export const NOT_AUTHORIZED_TO_GET_BROWSE_ITEMS = 'Not authorized to get items for browsing.'
+export const ERROR_GETTING_ITEMS = 'Error: Cannot get items for browsing.'
