@@ -14,6 +14,7 @@ export interface IItem extends Document {
     imagePublicId: string | undefined,
     imageSecureUrl: string | undefined,
     brand: string | undefined,
+    createdAt: number,
     __v: number,
 }
 
@@ -57,6 +58,10 @@ const ItemSchema: Schema = new Schema({
     brand: {
         type: String,
     },
+    createdAt: {
+        type: Number,
+        default: () => Date.now()
+    }
     
 })
 

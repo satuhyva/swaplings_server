@@ -16,6 +16,9 @@ import { AddMatchResponseType } from '../../../types/item/AddMatchResponseType'
 import { addMatchService } from '../services/addMatchService'
 import { BrowseItemsInputType } from '../../../types/item/BrowseItemsInputType'
 import { browseItemsService } from '../services/browseItemsService'
+import { BrowseItemsByPageInputType, BrowseItemsByPageResponseType } from '../../../types/item/BrowseItemsByPageResponseType'
+import { browseItemsByPageService } from '../services/browseItemsByPageService'
+
 
 
 const typeDefs = gql`
@@ -68,10 +71,36 @@ const typeDefs = gql`
         myItem: Item
     }
 
+    type Edge {
+        cursor: String
+        node: Item
+    }
+
+    type PageInfo {
+        endCursor: String
+        hasNextPage: Boolean,
+        startCursor: String,
+        hasPreviousPage: Boolean
+    }
+
+    input BrowseItemsByPageInput {
+        first: Int
+        after: String
+        browseItemsInput: BrowseItemsInput!
+    }
+
+    type BrowseItemsByPageResponse {
+        edges: [Edge]
+        pageInfo: PageInfo
+    }
+
 
     extend type Query {
         myItems: [Item]
         browseItems(browseItemsInput: BrowseItemsInput!): [Item]
+        browseItemsByPage(browseItemsByPageInput: BrowseItemsByPageInput!): BrowseItemsByPageResponse
+        # allItems: [Item]
+        # someItems: [Item]
     }  
 
     extend type Mutation {
@@ -97,6 +126,20 @@ const resolvers = {
 
       browseItems: async (_root: void, args: { browseItemsInput: BrowseItemsInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<ItemPublicType[]> => {
         return await browseItemsService(context.authenticatedPerson, context.Item, args.browseItemsInput)
+      },
+
+    //   allItems: async (_root: void, _args: void, context: { Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
+    //     const items = await context.Item.find({})
+    //     return items.map(item => getItemDatabaseType(item))
+    //   }, 
+    //   someItems: async (_root: void, _args: void, context: { Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
+    //     const items = await context.Item.find({})
+    //     const parsed = items.map(item => getItemDatabaseType(item))
+    //     if (parsed.length > 1) return [parsed[0]]
+    //     return []
+    //   },   
+      browseItemsByPage: async (_root: void, args: { browseItemsByPageInput: BrowseItemsByPageInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<BrowseItemsByPageResponseType> => {
+        return await browseItemsByPageService(context.authenticatedPerson, context.Item, args.browseItemsByPageInput)
       }
 
     },
