@@ -11,14 +11,14 @@ import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
 import { myItemsService } from '../services/myItemsService'
 import { matchedToOrFromService } from '../services/matchedToOrFromService'
 import { ItemPublicType } from '../../../types/item/ItemPublicType'
-import { AddMatchInputType } from '../../../types/item/AddMatchInputType'
-import { AddMatchResponseType } from '../../../types/item/AddMatchResponseType'
+import { ChangeMatchInputType } from '../../../types/item/ChangeMatchInputType'
+import { ChangeMatchResponseType } from '../../../types/item/ChangeMatchResponseType'
 import { addMatchService } from '../services/addMatchService'
 import { BrowseItemsInputType } from '../../../types/item/BrowseItemsInputType'
 import { browseItemsService } from '../services/browseItemsService'
 import { BrowseItemsByPageInputType, BrowseItemsByPageResponseType } from '../../../types/item/BrowseItemsByPageResponseType'
 import { browseItemsByPageService } from '../services/browseItemsByPageService'
-
+import { removeMatchService } from '../services/removeMatchService'
 
 
 const typeDefs = gql`
@@ -32,7 +32,7 @@ const typeDefs = gql`
         imageSecureUrl: String
     }
 
-    input AddMatchInput {
+    input ChangeMatchInput {
         myItemId: ID!
         itemToId: ID!
     }
@@ -64,7 +64,7 @@ const typeDefs = gql`
         item: Item
     }
 
-    type AddMatchResponse implements MutationResponse {
+    type ChangeMatchResponse implements MutationResponse {
         code: String!
         success: Boolean!
         message: String!
@@ -105,7 +105,8 @@ const typeDefs = gql`
 
     extend type Mutation {
         addItem(addItemInput: AddItemInput!): AddItemResponse
-        addMatch(addMatchInput: AddMatchInput): AddMatchResponse
+        addMatch(changeMatchInput: ChangeMatchInput): ChangeMatchResponse
+        removeMatch(changeMatchInput: ChangeMatchInput): ChangeMatchResponse
         # cancelItemMatch(cancellingItemId: ID!, matchedItemId: ID!): Boolean
         # discussItem(itemFromId: ID!, itemToId: ID!, username: String!, content: String!): Boolean
         # markItemAsSwapped: kumpikin osapuoli osaltaan voi merkitä, että on swapped, silloin häviää henkilöltä näkyvistä
@@ -154,10 +155,16 @@ const resolvers = {
                 return await addItemService(context.authenticatedPerson, context.Person, context.Item, args.addItemInput)
         },
 
-        addMatch: async (_root: void, args: { addMatchInput: AddMatchInputType }, 
+        addMatch: async (_root: void, args: { changeMatchInput: ChangeMatchInputType }, 
             context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
-            ): Promise<AddMatchResponseType> => {
-                return await addMatchService(context.authenticatedPerson, context.Item, args.addMatchInput)
+            ): Promise<ChangeMatchResponseType> => {
+                return await addMatchService(context.authenticatedPerson, context.Item, args.changeMatchInput)
+        },
+
+        removeMatch: async (_root: void, args: { changeMatchInput: ChangeMatchInputType }, 
+            context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
+            ): Promise<ChangeMatchResponseType> => {
+                return await removeMatchService(context.authenticatedPerson, context.Item, args.changeMatchInput)
         }
 
     },

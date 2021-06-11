@@ -6,33 +6,31 @@ import { ChangeMatchResponseType } from '../../../types/item/ChangeMatchResponse
 import mongoose from 'mongoose'
 import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
 import { 
-    NOT_AUTHORIZED_TO_ADD_MATCH, 
     ERROR_FINDING_ITEMS_IN_DATABASE, 
-    ERROR_THIS_WAY_MATCH_ALREADY_EXISTS,
-    SUCCESS_ADDING_MATCH,
-    ERROR_ADDING_MATCH,
     ERROR_NOT_OWNER,
     ERROR_OWN_TO_ITEM
  } from '../helpers/errorMessages'
 
 
 
-export const addMatchService = async (
+export const removeMatchService = async (
     authenticatedPerson: IPerson,
     Item: Model<IItem>, 
-    addMatchInput: ChangeMatchInputType
+    removeMatchInput: ChangeMatchInputType
     ): Promise<ChangeMatchResponseType> => {
     
         if (!authenticatedPerson) {
             return {
                 code: '401',
                 success: false,
-                message: NOT_AUTHORIZED_TO_ADD_MATCH,
+                message: 'Not authorized to remove match.',
                 myItem: undefined
             }
         }
 
-        const { myItemId, itemToId } = addMatchInput
+        // TODO: muuta virheviestit järkevämmiksi
+
+        const { myItemId, itemToId } = removeMatchInput
 
         const myDatabaseItem = await Item.findById(myItemId)
         const toDatabaseItem = await Item.findById(itemToId)
@@ -62,29 +60,35 @@ export const addMatchService = async (
                 myItem: undefined
             }
         }
+        // console.log(myDatabaseItem, '\n', toDatabaseItem)
+        // console.log(toDatabaseItem.matchedFromIds, toDatabaseItem.matchedFromIds.includes(myItemId))
+        // console.log(myDatabaseItem.matchedToIds, myDatabaseItem.matchedToIds.includes(itemToId))
 
-        if (toDatabaseItem.matchedFromIds.includes(myItemId) || myDatabaseItem.matchedToIds.includes(itemToId)) {
+        if (!toDatabaseItem.matchedFromIds.includes(myItemId) && !myDatabaseItem.matchedToIds.includes(itemToId)) {
             return {
                 code: '500',
                 success: false,
-                message: ERROR_THIS_WAY_MATCH_ALREADY_EXISTS,
+                message: 'Match no longer exists, so it cannot be removed.',
                 myItem: undefined
             }
         } 
 
+        // TODO: poista myös itemien tulevat keskustelut, kun ne on toteutettu
         const session = await mongoose.startSession()
         session.startTransaction()
         try {
-            myDatabaseItem.matchedToIds = [ ...myDatabaseItem.matchedToIds, itemToId ]
+            console.log(myDatabaseItem.matchedToIds)
+            myDatabaseItem.matchedToIds = myDatabaseItem.matchedToIds.filter(myId => myId.toString() !== itemToId.toString())
+            console.log(myDatabaseItem.matchedToIds)
             await myDatabaseItem.save()
-            toDatabaseItem.matchedFromIds = [ ...toDatabaseItem.matchedFromIds, myItemId ]
+            toDatabaseItem.matchedFromIds = toDatabaseItem.matchedFromIds.filter(otherId => otherId.toString() !== myItemId.toString())
             await toDatabaseItem.save()
             await session.commitTransaction()
             session.endSession()
             return {
                 code: '200',
                 success: true,
-                message: SUCCESS_ADDING_MATCH,
+                message: 'Succesfully removed match.',
                 myItem: getItemDatabaseType(myDatabaseItem)
             }
         } catch (error) {
@@ -93,7 +97,7 @@ export const addMatchService = async (
             return {
                 code: '500',
                 success: false,
-                message: ERROR_ADDING_MATCH,
+                message: 'Error removing match.',
                 myItem: undefined
             }
         }

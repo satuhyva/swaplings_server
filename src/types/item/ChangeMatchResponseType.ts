@@ -1,6 +1,6 @@
 import { ItemDatabaseType } from './ItemDatabaseType'
 
-export type AddMatchResponseType = {
+export type ChangeMatchResponseType = {
     code: string,
     success: boolean,
     message: string,

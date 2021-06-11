@@ -20,6 +20,7 @@ export const removePersonService = async (authenticatedPerson: IPerson, Person: 
     }
 
     try {
+        // TODO: POISTA KAIKKI HENKILÖN ITEMIT YM., JOIHIN HENKILÖ LIITTYY (EIKÄ VAIN HENKILÖÄ)
         await Person.findByIdAndRemove(authenticatedPerson._id)
         return {
             code: '200',
