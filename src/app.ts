@@ -4,7 +4,7 @@ import { ApolloServer } from 'apollo-server-express'
 import typeDefsAndResolversCombined from './graphql-schema/combine-schemas/typeDefsAndResolversCombined'
 import Person from './mongoose-schema/person'
 import Item from './mongoose-schema/item'
-// import Discussion from './mongoose-schema/discussion'
+import Chat from './mongoose-schema/chat'
 import imageRouter from './routes/images/imageRouter'
 import { authenticationGraphQL } from './utils/authenticationGraphQL'
 import { IPerson } from './mongoose-schema/person'
@@ -33,7 +33,7 @@ const server = new ApolloServer({
         return { 
             Person, 
             Item, 
-            //Discussion, 
+            Chat,
             authenticatedPerson 
         }
     }

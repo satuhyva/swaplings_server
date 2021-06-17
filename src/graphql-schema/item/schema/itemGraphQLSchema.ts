@@ -2,6 +2,7 @@ import { gql } from 'apollo-server-express'
 import { Model } from 'mongoose'
 import { IItem } from '../../../mongoose-schema/item'
 import { IPerson } from '../../../mongoose-schema/person'
+import { IChat } from '../../../mongoose-schema/chat'
 import { addItemService } from '../services/addItemService'
 import { AddItemInputType } from '../../../types/item/AddItemInputType'
 import { AddItemResponseType } from '../../../types/item/AddItemResponseType'
@@ -19,6 +20,14 @@ import { browseItemsService } from '../services/browseItemsService'
 import { BrowseItemsByPageInputType, BrowseItemsByPageResponseType } from '../../../types/item/BrowseItemsByPageResponseType'
 import { browseItemsByPageService } from '../services/browseItemsByPageService'
 import { removeMatchService } from '../services/removeMatchService'
+import { AddPostResponseType } from '../../../types/item/AddPostResponseType'
+import { AddPostInputType } from '../../../types/item/AddPostInputType'
+import { addPostService } from '../services/addPostService'
+import { ItemsChatInputType } from '../../../types/item/ItemsChatInputType'
+import { ItemsChatResponseType } from '../../../types/item/ItemsChatResponseType'
+import { itemsChatService } from '../services/itemsChatService'
+
+
 
 
 const typeDefs = gql`
@@ -44,6 +53,17 @@ const typeDefs = gql`
         brands: [String]
     }
 
+    input AddPostInput {
+        itemIdA: ID!
+        itemIdB: ID!
+        post: String!
+    }
+
+    input ItemsChatInput {
+        itemIdA: ID!
+        itemIdB: ID!
+    }
+
     type Item {
         id: ID!
         title: String!
@@ -55,6 +75,28 @@ const typeDefs = gql`
         owner: Person!
         matchedTo: [Item]
         matchedFrom: [Item]
+    }
+
+    type Post {
+        post: String!
+        postingItemId: ID!
+        createdAt: String
+    }
+
+    type Chat {
+        id: ID!
+        itemIdA: ID!
+        personIdA: ID!
+        itemIdB: ID!
+        personIdB: ID!  
+        posts: [Post]!      
+    }
+
+    type ItemsChatResponse {
+        id: ID
+        itemIdA: ID!
+        itemIdB: ID! 
+        posts: [Post]! 
     }
     
     type AddItemResponse implements MutationResponse {
@@ -69,6 +111,13 @@ const typeDefs = gql`
         success: Boolean!
         message: String!
         myItem: Item
+    }
+
+    type AddPostResponse implements MutationResponse {
+        code: String!
+        success: Boolean!
+        message: String!
+        chat: Chat
     }
 
     type Edge {
@@ -99,19 +148,14 @@ const typeDefs = gql`
         myItems: [Item]
         browseItems(browseItemsInput: BrowseItemsInput!): [Item]
         browseItemsByPage(browseItemsByPageInput: BrowseItemsByPageInput!): BrowseItemsByPageResponse
-        # allItems: [Item]
-        # someItems: [Item]
+        itemsChat(itemsChatInput: ItemsChatInput!): ItemsChatResponse
     }  
 
     extend type Mutation {
         addItem(addItemInput: AddItemInput!): AddItemResponse
         addMatch(changeMatchInput: ChangeMatchInput): ChangeMatchResponse
         removeMatch(changeMatchInput: ChangeMatchInput): ChangeMatchResponse
-        # cancelItemMatch(cancellingItemId: ID!, matchedItemId: ID!): Boolean
-        # discussItem(itemFromId: ID!, itemToId: ID!, username: String!, content: String!): Boolean
-        # markItemAsSwapped: kumpikin osapuoli osaltaan voi merkitä, että on swapped, silloin häviää henkilöltä näkyvistä
-        # kun toinenkin merkitsee swapped, silloin poistuu molemmat itemit ja kaikki keskustelut
-        # LISÄÄ SWAPPED-TILA ITEMILLE! ja tämän mukaisesti hakuja...
+        addPost(addPostInput: AddPostInput!): AddPostResponse
     }
 `
 
@@ -129,19 +173,14 @@ const resolvers = {
         return await browseItemsService(context.authenticatedPerson, context.Item, args.browseItemsInput)
       },
 
-    //   allItems: async (_root: void, _args: void, context: { Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
-    //     const items = await context.Item.find({})
-    //     return items.map(item => getItemDatabaseType(item))
-    //   }, 
-    //   someItems: async (_root: void, _args: void, context: { Item: Model<IItem> }): Promise<ItemDatabaseType[]> => {
-    //     const items = await context.Item.find({})
-    //     const parsed = items.map(item => getItemDatabaseType(item))
-    //     if (parsed.length > 1) return [parsed[0]]
-    //     return []
-    //   },   
+ 
       browseItemsByPage: async (_root: void, args: { browseItemsByPageInput: BrowseItemsByPageInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<BrowseItemsByPageResponseType> => {
         return await browseItemsByPageService(context.authenticatedPerson, context.Item, args.browseItemsByPageInput)
-      }
+      },
+
+      itemsChat: async (_root: void, args: { itemsChatInput: ItemsChatInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem>, Chat: Model<IChat> }): Promise<ItemsChatResponseType> => {
+        return await itemsChatService(context.authenticatedPerson, context.Item, context.Chat, args.itemsChatInput)
+      },
 
     },
 
@@ -162,10 +201,16 @@ const resolvers = {
         },
 
         removeMatch: async (_root: void, args: { changeMatchInput: ChangeMatchInputType }, 
-            context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
+            context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem>, Chat: Model<IChat> } 
             ): Promise<ChangeMatchResponseType> => {
-                return await removeMatchService(context.authenticatedPerson, context.Item, args.changeMatchInput)
-        }
+                return await removeMatchService(context.authenticatedPerson, context.Item, context.Chat, args.changeMatchInput)
+        },
+
+        addPost: async (_root: void, args: { addPostInput: AddPostInputType }, 
+            context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem>, Chat: Model<IChat> } 
+            ): Promise<AddPostResponseType> => {
+                return await addPostService(context.authenticatedPerson, context.Item, context.Chat, args.addPostInput)
+        },
 
     },
 
@@ -188,61 +233,6 @@ const resolvers = {
 } 
 
 
-
-//{
-    // Query: {
-
-    // },
-
-    // Mutation: {
-
-
-        // cancelItemMatch: async(_root: void, args: { cancellingItemId: string, matchedItemId: string }, context: { Item: Model<IItem> }): Promise<boolean> => {
-        //     const { Item } = context
-        //     const cancellingItem: IItem | null = await Item.findById(args.cancellingItemId)
-        //     const matchedItem: IItem | null = await Item.findById(args.matchedItemId)
-        //     if (!cancellingItem) throw new ApolloError('Could not find CANCELLING item!')
-        //     if (!matchedItem) throw new ApolloError('Could not find MATCHED item!')
-        //     cancellingItem.matchedToIds = cancellingItem.matchedToIds.filter(itemId => itemId.toString() !== args.matchedItemId.toString())
-        //     await cancellingItem.save()
-        //     matchedItem.matchedFromIds = matchedItem.matchedFromIds.filter(itemId => itemId.toString() !== args.cancellingItemId.toString())
-        //     await matchedItem.save()
-        //     return true
-        // },
-
-
-        // discussItem: async (
-        //     _root: void, 
-        //     args: { itemFromId: string, itemToId: string, username: string, content: string }, 
-        //     context: { Person: Model<IPerson>, Item: Model<IItem>, Discussion: Model<IDiscussion> }
-        //     ): Promise<boolean> => {
-        //     const { Person, Item, Discussion } = context
-        //     const personDiscussing = await Person.findOne({ username: args.username })
-        //     if (!personDiscussing) throw new ApolloError('Could not find person!')
-        //     const itemFrom = await Item.findById(args.itemFromId).populate('ownerPersonId')
-        //     if (!itemFrom) throw new ApolloError('Could not find FROM item!')
-        //     const itemTo = await Item.findById(args.itemToId).populate('ownerPersonId')
-        //     if (!itemTo) throw new ApolloError('Could not find TO item!')
-        //     if ((itemFrom.ownerPersonId as unknown as  { username: string }).username !== args.username && 
-        //         (itemTo.ownerPersonId as unknown as  { username: string }).username !== args.username) {
-        //         throw new ApolloError('Person trying to discuss is not an owner of items in this discussion!')
-        //     }
-        //     const newDiscussionPiece = { content: args.content, postingPersonId: personDiscussing._id, createdAt: new Date().toISOString() }
-        //     const discussion = await Discussion.findOne({ itemFromId: args.itemFromId, itemToId: args.itemToId })
-        //     if (!discussion) {
-        //         const newDiscussion = new Discussion({ itemFromId: args.itemFromId, itemToId: args.itemToId, story: newDiscussionPiece })
-        //         await newDiscussion.save()
-        //         return true
-        //     } else {
-        //         discussion.story = [...discussion.story, newDiscussionPiece ]
-        //         await discussion.save()
-        //         return true
-        //     }
-        // }
-    // },
-
-
-// }
 
 export default {
     typeDefs,

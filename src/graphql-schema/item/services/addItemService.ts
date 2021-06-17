@@ -4,7 +4,7 @@ import { IPerson } from '../../../mongoose-schema/person'
 import { AddItemInputType } from '../../../types/item/AddItemInputType'
 import { AddItemResponseType } from '../../../types/item/AddItemResponseType'
 import mongoose from 'mongoose'
-import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
+// import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
 import { NOT_AUTHORIZED_TO_ADD_ITEM, OWNER_NOT_FOUND_IN_DATABASE, ERROR_SAVING_ITEM_TO_DATABASE, SUCCESS_ADD_ITEM, ERROR_ADDING_ITEM } from '../helpers/errorMessages'
 
 
@@ -46,11 +46,12 @@ export const addItemService = async (
             await person.save()
             await session.commitTransaction()
             session.endSession()
+
             return {
                 code: '200',
                 success: true,
                 message: SUCCESS_ADD_ITEM,
-                item: getItemDatabaseType(savedItem)
+                item: savedItem.toDatabaseItem()  //getItemDatabaseType(savedItem)
             }
         } catch (error) {
             await session.abortTransaction()

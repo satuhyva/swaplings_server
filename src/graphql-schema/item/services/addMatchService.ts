@@ -4,7 +4,7 @@ import { IPerson } from '../../../mongoose-schema/person'
 import { ChangeMatchInputType } from '../../../types/item/ChangeMatchInputType'
 import { ChangeMatchResponseType } from '../../../types/item/ChangeMatchResponseType'
 import mongoose from 'mongoose'
-import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
+// import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
 import { 
     NOT_AUTHORIZED_TO_ADD_MATCH, 
     ERROR_FINDING_ITEMS_IN_DATABASE, 
@@ -85,7 +85,7 @@ export const addMatchService = async (
                 code: '200',
                 success: true,
                 message: SUCCESS_ADDING_MATCH,
-                myItem: getItemDatabaseType(myDatabaseItem)
+                myItem: myDatabaseItem.toDatabaseItem() // getItemDatabaseType(myDatabaseItem)
             }
         } catch (error) {
             await session.abortTransaction()

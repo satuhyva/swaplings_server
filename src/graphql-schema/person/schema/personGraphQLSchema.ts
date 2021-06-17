@@ -14,6 +14,7 @@ import { IItem } from '../../../mongoose-schema/item'
 import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
 import { PersonDatabaseType } from '../../../types/person/PersonDatabaseType'
 import { ownedItemsService } from '../services/ownedItemsService'
+import { IChat } from '../../../mongoose-schema/chat'
 
 
 const typeDefs = gql`
@@ -62,19 +63,6 @@ const typeDefs = gql`
         ownedItems: [Item]
     }
 
-    # type PrivatePerson {
-    #     id: ID!
-    #     username: String
-    #     facebookName: String
-    #     email: String
-    #     # ownedItems: [PrivateItem]!
-    # }
-
-    # extend type Query {
-    #     allPersonsInDatabase: [PrivatePerson]!
-    #     privatePersonById(id: String!): PrivatePerson
-    # }
-
     extend type Mutation {
         signUpPerson(signUpInput: SignUpInput!): LoginSignUpResponse!
         loginPerson(loginInput: LoginInput!): LoginSignUpResponse!
@@ -85,20 +73,6 @@ const typeDefs = gql`
 `
 
 const resolvers = {
-
-    // Query: {
-
-    //     allPersonsInDatabase: async (_root: void, _args: void, context: { Person: Model<IPerson> }): Promise<PersonDatabaseType[]> => {
-    //         const allPersons = await allPersonsInDatabaseService(context.Person)
-    //         return allPersons
-    //     },
-
-    //     privatePersonById: async (_root: void, args: { id: string }, context: { Person: Model<IPerson> }): Promise<Omit<PersonDatabaseType, 'passwordHash'> | null> => {
-    //         const person = await privatePersonByUsernameService(context.Person, args.id)
-    //         return person
-    //     },
-
-    // },
 
     Mutation: {
 
@@ -120,8 +94,8 @@ const resolvers = {
                 return loggedInPerson
         },
 
-        removePerson: async (_root: void, _args: void, context: { authenticatedPerson: IPerson, Person: Model<IPerson> }): Promise<RemovePersonType> => {
-            const removePersonResult = await removePersonService(context.authenticatedPerson, context.Person)
+        removePerson: async (_root: void, _args: void, context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem>, Chat: Model<IChat> }): Promise<RemovePersonType> => {
+            const removePersonResult = await removePersonService(context.authenticatedPerson, context.Person, context.Item, context.Chat)
             return removePersonResult
         }
 

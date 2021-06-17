@@ -40,9 +40,11 @@ const PersonSchema: Schema = new Schema({
             ref: 'Item'
         }
     ] 
-})
+},
+    { optimisticConcurrency: true }
+)
 
-const Person = mongoose.model<IPerson>('Person', PersonSchema)
+const Person = mongoose.model<IPerson>('Person',  PersonSchema)
 
 export default Person
 

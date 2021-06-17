@@ -2,7 +2,7 @@ import { Model } from 'mongoose'
 import { IItem } from '../../../mongoose-schema/item'
 import { IPerson } from '../../../mongoose-schema/person'
 import { BrowseItemsInputType } from '../../../types/item/BrowseItemsInputType'
-import { getItemPublicType } from '../helpers/getItemPublicType'
+// import { getItemPublicType } from '../helpers/getItemPublicType'
 import { NOT_AUTHORIZED_TO_GET_BROWSE_ITEMS, ERROR_GETTING_ITEMS } from '../helpers/errorMessages'
 import { ApolloError } from 'apollo-server-express'
 import { ItemPublicType } from '../../../types/item/ItemPublicType'
@@ -72,7 +72,7 @@ export const browseItemsService = async (
 
         try {
             const items = await Item.find(searchCriteria)
-            return items.map(item => getItemPublicType(item))
+            return items.map(item => item.toPublicItem()) //getItemPublicType(item))
         } catch (error) {
             throw new ApolloError(ERROR_GETTING_ITEMS)
         }

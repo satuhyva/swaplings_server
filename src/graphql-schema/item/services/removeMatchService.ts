@@ -4,18 +4,20 @@ import { IPerson } from '../../../mongoose-schema/person'
 import { ChangeMatchInputType } from '../../../types/item/ChangeMatchInputType'
 import { ChangeMatchResponseType } from '../../../types/item/ChangeMatchResponseType'
 import mongoose from 'mongoose'
-import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
+// import { getItemDatabaseType } from '../helpers/getItemDatabaseType'
 import { 
     ERROR_FINDING_ITEMS_IN_DATABASE, 
     ERROR_NOT_OWNER,
     ERROR_OWN_TO_ITEM
  } from '../helpers/errorMessages'
+import { IChat } from '../../../mongoose-schema/chat'
 
 
 
 export const removeMatchService = async (
     authenticatedPerson: IPerson,
     Item: Model<IItem>, 
+    Chat: Model<IChat> ,
     removeMatchInput: ChangeMatchInputType
     ): Promise<ChangeMatchResponseType> => {
     
@@ -60,9 +62,6 @@ export const removeMatchService = async (
                 myItem: undefined
             }
         }
-        // console.log(myDatabaseItem, '\n', toDatabaseItem)
-        // console.log(toDatabaseItem.matchedFromIds, toDatabaseItem.matchedFromIds.includes(myItemId))
-        // console.log(myDatabaseItem.matchedToIds, myDatabaseItem.matchedToIds.includes(itemToId))
 
         if (!toDatabaseItem.matchedFromIds.includes(myItemId) && !myDatabaseItem.matchedToIds.includes(itemToId)) {
             return {
@@ -73,13 +72,12 @@ export const removeMatchService = async (
             }
         } 
 
-        // TODO: poista myös itemien tulevat keskustelut, kun ne on toteutettu
+
         const session = await mongoose.startSession()
         session.startTransaction()
         try {
-            console.log(myDatabaseItem.matchedToIds)
+            await Chat.deleteOne({ $or: [ { itemIdA: myDatabaseItem._id, itemIdB: toDatabaseItem._id }, { itemIdA: toDatabaseItem._id, itemIdB: myDatabaseItem._id } ]})
             myDatabaseItem.matchedToIds = myDatabaseItem.matchedToIds.filter(myId => myId.toString() !== itemToId.toString())
-            console.log(myDatabaseItem.matchedToIds)
             await myDatabaseItem.save()
             toDatabaseItem.matchedFromIds = toDatabaseItem.matchedFromIds.filter(otherId => otherId.toString() !== myItemId.toString())
             await toDatabaseItem.save()
@@ -89,7 +87,7 @@ export const removeMatchService = async (
                 code: '200',
                 success: true,
                 message: 'Succesfully removed match.',
-                myItem: getItemDatabaseType(myDatabaseItem)
+                myItem: myDatabaseItem.toDatabaseItem()     // getItemDatabaseType(myDatabaseItem)
             }
         } catch (error) {
             await session.abortTransaction()

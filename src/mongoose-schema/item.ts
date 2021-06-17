@@ -1,4 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose'
+import { ItemDatabaseType } from '../types/item/ItemDatabaseType'
+import { ItemPublicType } from '../types/item/ItemPublicType'
 import { PriceGroupEnum } from '../types/price-group/PriceGroupEnum'
 import { IPerson } from './person'
 
@@ -16,6 +18,8 @@ export interface IItem extends Document {
     brand: string | undefined,
     createdAt: number,
     __v: number,
+    toPublicItem: () => ItemPublicType,
+    toDatabaseItem: () => ItemDatabaseType,
 }
 
 
@@ -63,7 +67,40 @@ const ItemSchema: Schema = new Schema({
         default: () => Date.now()
     }
     
-})
+},
+    { 
+        optimisticConcurrency: true,
+    }
+)
+
+ItemSchema.methods.toPublicItem = function (): ItemPublicType {
+    const thisItem = this as IItem
+    return {
+        id: thisItem._id, 
+        title: thisItem.title, 
+        description: thisItem.description, 
+        priceGroup: thisItem.priceGroup, 
+        imagePublicId: thisItem.imagePublicId,
+        imageSecureUrl: thisItem.imageSecureUrl,
+        brand: thisItem.brand,
+    }
+}
+
+ItemSchema.methods.toDatabaseItem = function (): ItemDatabaseType {
+    const thisItem = this as IItem
+    return {
+        id: thisItem._id, 
+        title: thisItem.title, 
+        description: thisItem.description, 
+        priceGroup: thisItem.priceGroup, 
+        ownerPersonId: thisItem.ownerPersonId,
+        matchedToIds: thisItem.matchedToIds,
+        matchedFromIds: thisItem.matchedFromIds,
+        imagePublicId: thisItem.imagePublicId,
+        imageSecureUrl: thisItem.imageSecureUrl,
+        brand: thisItem.brand,
+    }
+}
 
 
 const Item = mongoose.model<IItem>('Item', ItemSchema)

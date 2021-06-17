@@ -1,7 +1,7 @@
 import { Model } from 'mongoose'
 import { IItem } from '../../../mongoose-schema/item'
 import { IPerson } from '../../../mongoose-schema/person'
-import { getItemPublicType } from '../helpers/getItemPublicType'
+// import { getItemPublicType } from '../helpers/getItemPublicType'
 import { NOT_AUTHORIZED_TO_GET_BROWSE_ITEMS, ERROR_GETTING_ITEMS } from '../helpers/errorMessages'
 import { ApolloError } from 'apollo-server-express'
 import { getBrowseSearchCriteria } from '../helpers/getBrowseSearchCriteria'
@@ -60,7 +60,7 @@ export const browseItemsByPageService = async (
                 edges: itemsToReturn.map(item => {
                         return {
                             cursor: item._id,
-                            node: getItemPublicType(item)
+                            node: item.toPublicItem()   //getItemPublicType(item)
                         }
                     }),
                 pageInfo: {
