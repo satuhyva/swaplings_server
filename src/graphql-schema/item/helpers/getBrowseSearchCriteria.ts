@@ -59,15 +59,3 @@ const getRegexCondition = (wordsList: string[]) => {
 
 
 
-// if (brands && brands.length > 0) {
-//     let brandsRegexStringBuilder = '(?=.*('
-//     for (let i = 0; i < brands.length; i++) {
-//         brandsRegexStringBuilder += brands[i]
-//         if (i < brands.length - 1) {
-//             brandsRegexStringBuilder += '|'
-//         }
-//     }
-//     brandsRegexStringBuilder += '))'
-//     searchCriteria = { ...searchCriteria, brand: { $regex: new RegExp(brandsRegexStringBuilder, 'i') }}
-// }
-

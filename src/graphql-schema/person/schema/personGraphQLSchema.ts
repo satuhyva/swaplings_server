@@ -78,35 +78,29 @@ const resolvers = {
 
         signUpPerson: async (_: void, args: { signUpInput: SignUpPersonInputType }, context: { Person: Model<IPerson> }): 
             Promise<LoginSignUpResponseType> => {
-                const signedUpPerson = await signUpPersonService(context.Person, args.signUpInput)
-                return signedUpPerson
+                return signUpPersonService(context.Person, args.signUpInput)
         },
 
         loginPerson: async (_: void, args: { loginInput: LoginPersonInputType }, context: { Person: Model<IPerson> }):
             Promise<LoginSignUpResponseType> => {
-                const loggedInPerson = await loginPersonService(args.loginInput, context.Person)
-                return loggedInPerson
+                return loginPersonService(args.loginInput, context.Person)
         },
 
         facebookLogin: async (_: void, args: { facebookLoginInput: FacebookInputType }, context: { Person: Model<IPerson> }):
             Promise<LoginSignUpResponseType> => {
-                const loggedInPerson = await loginPersonWithFacebookService(args.facebookLoginInput, context.Person)
-                return loggedInPerson
+                return loginPersonWithFacebookService(args.facebookLoginInput, context.Person)
         },
 
         removePerson: async (_root: void, _args: void, context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem>, Chat: Model<IChat> }): Promise<RemovePersonType> => {
-            const removePersonResult = await removePersonService(context.authenticatedPerson, context.Person, context.Item, context.Chat)
-            return removePersonResult
+            return removePersonService(context.authenticatedPerson, context.Person, context.Item, context.Chat)
         }
-
 
     },
 
     Person: {
 
         ownedItems: async (root: PersonDatabaseType, _args: void, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<null | ItemDatabaseType[]> => {
-            const items = await ownedItemsService(context.authenticatedPerson, root.id, context.Item)
-            return items
+            return ownedItemsService(context.authenticatedPerson, root.id, context.Item)
         },
         
     },

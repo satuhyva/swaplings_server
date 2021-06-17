@@ -1,6 +1,5 @@
 import { Model } from 'mongoose'
 import { IItem } from '../../../mongoose-schema/item'
-// import { getItemDatabaseType } from '../../item/helpers/getItemDatabaseType'
 import { ApolloError } from 'apollo-server-express'
 import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
 import { IPerson } from '../../../mongoose-schema/person'
@@ -19,6 +18,6 @@ export const ownedItemsService = async (authenticatedPerson: IPerson, personId: 
         throw new ApolloError('Error in getting items owned by person:')
     }
 
-    return itemsByAuthenticatedPerson.map(item =>  item.toDatabaseItem())     // getItemDatabaseType(item))
+    return itemsByAuthenticatedPerson.map(item =>  item.toDatabaseItem())     
 
 }

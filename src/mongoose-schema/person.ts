@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose'
+import { PersonDatabaseType } from '../types/person/PersonDatabaseType'
 import { IItem } from './item'
 
 //https://tomanagle.medium.com/strongly-typed-models-with-mongoose-and-typescript-7bc2f7197722
@@ -13,6 +14,7 @@ export interface IPerson extends Document {
     facebookName: string | null,
     ownedItemIds: IItem['_id'][],
     __v: number,
+    toDatabasePerson: () => PersonDatabaseType,
 }
 
 // Unique requirements are not added because several nulls are not allowed! 
@@ -43,6 +45,18 @@ const PersonSchema: Schema = new Schema({
 },
     { optimisticConcurrency: true }
 )
+
+PersonSchema.methods.toDatabasePerson = function (): PersonDatabaseType {
+    const thisPerson = this as IPerson
+    return {
+        id: thisPerson._id, 
+        username: thisPerson.username, 
+        facebookId: thisPerson.facebookId,
+        facebookName: thisPerson.facebookName,
+        email: thisPerson.email ,
+        ownedItemdIds: thisPerson.ownedItemIds,
+    }
+}
 
 const Person = mongoose.model<IPerson>('Person',  PersonSchema)
 

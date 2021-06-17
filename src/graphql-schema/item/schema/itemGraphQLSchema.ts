@@ -7,7 +7,7 @@ import { addItemService } from '../services/addItemService'
 import { AddItemInputType } from '../../../types/item/AddItemInputType'
 import { AddItemResponseType } from '../../../types/item/AddItemResponseType'
 import { PersonDatabaseType } from '../../../types/person/PersonDatabaseType'
-import { getPersonService } from '../../person/getPersonService'
+import { getPersonService } from '../../person/services/getPersonService'
 import { ItemDatabaseType } from '../../../types/item/ItemDatabaseType'
 import { myItemsService } from '../services/myItemsService'
 import { matchedToOrFromService } from '../services/matchedToOrFromService'
@@ -15,8 +15,6 @@ import { ItemPublicType } from '../../../types/item/ItemPublicType'
 import { ChangeMatchInputType } from '../../../types/item/ChangeMatchInputType'
 import { ChangeMatchResponseType } from '../../../types/item/ChangeMatchResponseType'
 import { addMatchService } from '../services/addMatchService'
-import { BrowseItemsInputType } from '../../../types/item/BrowseItemsInputType'
-import { browseItemsService } from '../services/browseItemsService'
 import { BrowseItemsByPageInputType, BrowseItemsByPageResponseType } from '../../../types/item/BrowseItemsByPageResponseType'
 import { browseItemsByPageService } from '../services/browseItemsByPageService'
 import { removeMatchService } from '../services/removeMatchService'
@@ -51,6 +49,12 @@ const typeDefs = gql`
         phrasesInTitle: [String]
         phrasesInDescription: [String]
         brands: [String]
+    }
+
+    input BrowseItemsByPageInput {
+        first: Int
+        after: String
+        browseItemsInput: BrowseItemsInput!
     }
 
     input AddPostInput {
@@ -132,11 +136,6 @@ const typeDefs = gql`
         hasPreviousPage: Boolean
     }
 
-    input BrowseItemsByPageInput {
-        first: Int
-        after: String
-        browseItemsInput: BrowseItemsInput!
-    }
 
     type BrowseItemsByPageResponse {
         edges: [Edge]
@@ -146,7 +145,6 @@ const typeDefs = gql`
 
     extend type Query {
         myItems: [Item]
-        browseItems(browseItemsInput: BrowseItemsInput!): [Item]
         browseItemsByPage(browseItemsByPageInput: BrowseItemsByPageInput!): BrowseItemsByPageResponse
         itemsChat(itemsChatInput: ItemsChatInput!): ItemsChatResponse
     }  
@@ -169,11 +167,6 @@ const resolvers = {
         return await myItemsService(context.authenticatedPerson, context.Item)
       },
 
-      browseItems: async (_root: void, args: { browseItemsInput: BrowseItemsInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<ItemPublicType[]> => {
-        return await browseItemsService(context.authenticatedPerson, context.Item, args.browseItemsInput)
-      },
-
- 
       browseItemsByPage: async (_root: void, args: { browseItemsByPageInput: BrowseItemsByPageInputType }, context: { authenticatedPerson: IPerson, Item: Model<IItem> }): Promise<BrowseItemsByPageResponseType> => {
         return await browseItemsByPageService(context.authenticatedPerson, context.Item, args.browseItemsByPageInput)
       },
@@ -191,25 +184,25 @@ const resolvers = {
             args: { addItemInput: AddItemInputType }, 
             context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
             ): Promise<AddItemResponseType> => {
-                return await addItemService(context.authenticatedPerson, context.Person, context.Item, args.addItemInput)
+                return addItemService(context.authenticatedPerson, context.Person, context.Item, args.addItemInput)
         },
 
         addMatch: async (_root: void, args: { changeMatchInput: ChangeMatchInputType }, 
             context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem> } 
             ): Promise<ChangeMatchResponseType> => {
-                return await addMatchService(context.authenticatedPerson, context.Item, args.changeMatchInput)
+                return addMatchService(context.authenticatedPerson, context.Item, args.changeMatchInput)
         },
 
         removeMatch: async (_root: void, args: { changeMatchInput: ChangeMatchInputType }, 
             context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem>, Chat: Model<IChat> } 
             ): Promise<ChangeMatchResponseType> => {
-                return await removeMatchService(context.authenticatedPerson, context.Item, context.Chat, args.changeMatchInput)
+                return removeMatchService(context.authenticatedPerson, context.Item, context.Chat, args.changeMatchInput)
         },
 
         addPost: async (_root: void, args: { addPostInput: AddPostInputType }, 
             context: { authenticatedPerson: IPerson, Person: Model<IPerson>, Item: Model<IItem>, Chat: Model<IChat> } 
             ): Promise<AddPostResponseType> => {
-                return await addPostService(context.authenticatedPerson, context.Item, context.Chat, args.addPostInput)
+                return addPostService(context.authenticatedPerson, context.Item, context.Chat, args.addPostInput)
         },
 
     },
@@ -217,15 +210,15 @@ const resolvers = {
     Item: {
 
         owner: async (root: ItemDatabaseType, _args: void, context: { Person: Model<IPerson> }): Promise<PersonDatabaseType> => {
-            return await getPersonService(root.ownerPersonId, context.Person)
+            return getPersonService(root.ownerPersonId, context.Person)
         },
 
         matchedTo: async (root: ItemDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<ItemPublicType[]> => {
-            return await matchedToOrFromService(root.matchedToIds, context.Item)
+            return matchedToOrFromService(root.matchedToIds, context.Item)
         },
 
         matchedFrom: async (root: ItemDatabaseType, _args: void, context: { Item: Model<IItem> }): Promise<ItemPublicType[]> => {
-            return await matchedToOrFromService(root.matchedFromIds, context.Item)
+            return matchedToOrFromService(root.matchedFromIds, context.Item)
         },
 
     }
