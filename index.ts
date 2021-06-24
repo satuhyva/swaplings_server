@@ -2,7 +2,7 @@ import app from './src/app'
 import configurations from './src/utils/configurations'
 import mongoose from 'mongoose'
 import { Server } from 'node:http'
-
+import { clearTestDatabase } from './src/tests/clearTestDatabase'
 
 
 export const connectToMongooseDatabase = async (): Promise<void> => {
@@ -13,6 +13,14 @@ export const connectToMongooseDatabase = async (): Promise<void> => {
         await mongoose.connect(configurations.MONGO_DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
         if (process.env.NODE_ENV !== 'test') {
             console.log('Connected to MongoDB')
+        }
+        if (process.env.E2E === 'e2e') {
+            await clearTestDatabase()
+            console.log('Cleared test database for E2E testing')
+        }
+        if (process.env.DEV === 'dev') {
+            await clearTestDatabase()
+            console.log('Cleared test database for running in development mode')
         }
     } catch (error) {
         console.log('Error in connecting to MongoDB:', error)

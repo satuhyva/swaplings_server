@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
-    "dev": "ts-node-dev index.ts",
+    "dev": "DEV=dev ts-node-dev index.ts",
     "start": "node build/index.js",
     "eslint": "eslint --ext .ts .",
-    "test": "cross-env NODE_ENV=test jest --verbose --runInBand"
+    "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
+    "e2e": "E2E=e2e ts-node-dev index.ts"
   },
   "author": "Satu Hyvärinen",
   "license": "ISC",
