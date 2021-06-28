@@ -40,7 +40,9 @@ describe('PERSON', () => {
     })
 
     beforeEach(async () => {
+        console.log('clear database before')
         await clearTestDatabase()
+        console.log('clear database after')
     })
 
 
@@ -51,19 +53,26 @@ describe('PERSON', () => {
 
     
     test('given proper username, password and email, person can sign up', async () => {
-        const query = signUpPersonQuery(USERNAME, PASSWORD, EMAIL)
-        const response = await performTestServerQuery(testServer, query) as Response
-        expect(response.status).toBe(200)
-        const signedUpPerson = (response.body as unknown as SignUpPersonResponseType).data.signUpPerson
-        expect(signedUpPerson.code).toBe('200')
-        expect(signedUpPerson.success).toBe(true)
-        expect(signedUpPerson.message).toBe(SIGNUP_SUCCESS)
-        expect(signedUpPerson.username).toBe(USERNAME)
-        expect(signedUpPerson.facebookName).toBeNull()
-        expect(signedUpPerson.jwtToken).toBeDefined()
-        expect(signedUpPerson.id).toBeDefined()
-        const person = await Person.findOne({ username: USERNAME }) as { username: string}
-        expect(person.username).toBe(USERNAME)
+        try {
+            const query = signUpPersonQuery(USERNAME, PASSWORD, EMAIL)
+            console.log(query)
+            const response = await performTestServerQuery(testServer, query) as Response
+            console.log(response)
+            expect(response.status).toBe(200)
+            const signedUpPerson = (response.body as unknown as SignUpPersonResponseType).data.signUpPerson
+            expect(signedUpPerson.code).toBe('200')
+            expect(signedUpPerson.success).toBe(true)
+            expect(signedUpPerson.message).toBe(SIGNUP_SUCCESS)
+            expect(signedUpPerson.username).toBe(USERNAME)
+            expect(signedUpPerson.facebookName).toBeNull()
+            expect(signedUpPerson.jwtToken).toBeDefined()
+            expect(signedUpPerson.id).toBeDefined()
+            const person = await Person.findOne({ username: USERNAME }) as { username: string}
+            expect(person.username).toBe(USERNAME)
+        } catch (error) {
+            console.log(error)
+        }
+
     })
 
     test('given proper username and password (but no email), person can sign up', async () => {
