@@ -19,4 +19,6 @@ export const BRAND = 'Some item brand'
 export const IMAGE_PUBLIC_ID = 'Some image public ID'
 export const IMAGE_SECURE_URL = 'Some image url'
 
+export const POST = 'Some Post!'
+
 

@@ -1,15 +1,15 @@
 import supertest from 'supertest'
 import app from '../app'
-import { performAuthorizedTestServerQuery, addItemQuery, myItemsQuery } from './queries'
+import { performAuthorizedTestServerQuery, loginPersonQuery, myItemsQuery, performTestServerQuery  } from './queries'
 import { connectToMongooseDatabase } from '../../index'
 import mongoose from 'mongoose'
 import { clearTestDatabase } from './clearTestDatabase'
 import { SUCCESS_ADD_ITEM } from '../graphql-schema/item/helpers/errorMessages'
 import Person from '../mongoose-schema/person'
-import { PASSWORD, PASSWORDHASH, USERNAME, TITLE, PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL } from './constants'
-import { AddItemResponseType, MyItemsResponseType } from './types'
+import { PASSWORD, PASSWORDHASH, USERNAME, TITLE, PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL, POST } from './constants'
+import {  LoginPersonResponseType, MyItemsResponseType } from './types'
 import { stopServer } from '../../index'
-import { addPersonToDatabaseAndPerformLogin } from './helperFunctions'
+import {  addPersonAndAnItemToPerson, addPostToItemsChat } from './helperFunctions'
 
 
 const testServer = supertest(app)
@@ -32,10 +32,7 @@ describe('ITEM', () => {
     })
 
     test('given valid item details, an item can be added to a logged in person', async () => {
-        const token = await addPersonToDatabaseAndPerformLogin(testServer, USERNAME, PASSWORD, PASSWORDHASH)
-        const addQuery = addItemQuery(TITLE, PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
-        const responseAddItem = await performAuthorizedTestServerQuery(testServer, addQuery, token) as Response
-        const addedItemResponse = responseAddItem.body as unknown as AddItemResponseType
+        const addedItemResponse = await addPersonAndAnItemToPerson(testServer, USERNAME, PASSWORD, PASSWORDHASH, TITLE, PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
         const addedItem = addedItemResponse.data.addItem
         expect(addedItem.code).toBe('200')
         expect(addedItem.success).toBe(true)
@@ -47,28 +44,47 @@ describe('ITEM', () => {
         expect(addedItem.item.owner.id).toBeDefined()
         expect(addedItem.item.matchedTo.length).toBe(0)
         expect(addedItem.item.matchedFrom.length).toBe(0)
-        expect(addedItem.item.image_public_id).toBe(IMAGE_PUBLIC_ID)
-        expect(addedItem.item.image_secure_url).toBe(IMAGE_SECURE_URL)
+        expect(addedItem.item.imagePublicId).toBe(IMAGE_PUBLIC_ID)
+        expect(addedItem.item.imageSecureUrl).toBe(IMAGE_SECURE_URL)
         expect(addedItem.item.brand).toBe(BRAND)
         const person = await Person.findOne({ username: USERNAME }) as { username: string}
         expect(person.username).toBe(USERNAME)
     })
 
     test('given an app user, the user can get his or her (and only his or her) items', async () => {
-        const token_1 = await addPersonToDatabaseAndPerformLogin(testServer, USERNAME + '_1', PASSWORD, PASSWORDHASH)
-        const addItemQuery_1 = addItemQuery(TITLE + '_1', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
-        await performAuthorizedTestServerQuery(testServer, addItemQuery_1, token_1)
-        const token_2 = await addPersonToDatabaseAndPerformLogin(testServer, USERNAME + '_2', PASSWORD, PASSWORDHASH)
-        const addItemQuery_2A = addItemQuery(TITLE + '_2A', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
-        await performAuthorizedTestServerQuery(testServer, addItemQuery_2A, token_2)
-        const addItemQuery_2B = addItemQuery(TITLE + '_2B', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
-        await performAuthorizedTestServerQuery(testServer, addItemQuery_2B, token_2)
+        await addPersonAndAnItemToPerson(testServer, USERNAME + '_1', PASSWORD, PASSWORDHASH, TITLE + '_1', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
+        await addPersonAndAnItemToPerson(testServer, USERNAME + '_2', PASSWORD, PASSWORDHASH, TITLE + '_2A', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
+        await addPersonAndAnItemToPerson(testServer, USERNAME + '_2', PASSWORD, PASSWORDHASH, TITLE + '_2B', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
+        
+        const queryLogin = loginPersonQuery(USERNAME + '_2', PASSWORD)
+        const responseLogin = await performTestServerQuery(testServer, queryLogin) as Response
+        const loggedInPerson = (responseLogin.body as unknown as LoginPersonResponseType).data.loginPerson
+        const token = loggedInPerson.jwtToken
+        if (!token) throw new Error('Token is required but it is missing.')
         const queryMyItems = myItemsQuery()
-        const responseMyItems = await performAuthorizedTestServerQuery(testServer, queryMyItems, token_2) as Response
+        const responseMyItems = await performAuthorizedTestServerQuery(testServer, queryMyItems, token) as Response
         const myItems = (responseMyItems.body as unknown as MyItemsResponseType).data.myItems
         expect(myItems.length).toBe(2)
         expect(myItems[0].title).toBe(TITLE + '_2A')
         expect(myItems[1].title).toBe(TITLE + '_2B')
+    })
+
+    test('given a matched pair of items, posts can be added to a chat for this match', async () => {
+        const user_1 = USERNAME + '_1'
+        const user_2 = USERNAME + '_2'
+        const addedItem1Response = await addPersonAndAnItemToPerson(testServer, user_1, PASSWORD, PASSWORDHASH, TITLE + '_1', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
+        const addedItem1Id = addedItem1Response.data.addItem.item.id
+        const addedItem2Response = await addPersonAndAnItemToPerson(testServer, user_2, PASSWORD, PASSWORDHASH, TITLE + '_2', PRICE_GROUP, DESCRIPTION, BRAND, IMAGE_PUBLIC_ID, IMAGE_SECURE_URL)
+        const addedItem2Id = addedItem2Response.data.addItem.item.id
+        const post1Result = await addPostToItemsChat(testServer, addedItem1Id, addedItem2Id, POST + ' by _1', user_1, PASSWORD)
+        const chat_first = post1Result.data.addPost.chat
+        expect(chat_first.posts.length).toBe(1)
+        const post2Result = await addPostToItemsChat(testServer, addedItem1Id, addedItem2Id, POST + ' by _1', user_1, PASSWORD)
+        const chat_second = post2Result.data.addPost.chat
+        expect(chat_second.posts.length).toBe(2)
+        const post3Result = await addPostToItemsChat(testServer, addedItem2Id, addedItem1Id, POST + ' by _2', user_2, PASSWORD)
+        const chat_third = post3Result.data.addPost.chat
+        expect(chat_third.posts.length).toBe(3)
     })
 
 

@@ -1,5 +1,6 @@
 import { ItemPublicType } from '../types/item/ItemPublicType'
 import { PersonDatabaseType } from '../types/person/PersonDatabaseType'
+import { ChatType } from '../types/item/ChatType'
 
 
 type SignUpLoginResponseCommonPartsType = {
@@ -51,8 +52,8 @@ type ItemInResponseType = {
     owner: PersonDatabaseType,
     matchedTo: ItemPublicType[],
     matchedFrom: ItemPublicType[],
-    image_public_id?: string,
-    image_secure_url?: string,
+    imagePublicId?: string,
+    imageSecureUrl?: string,
     brand?: string, 
 }
 
@@ -70,6 +71,18 @@ export type AddItemResponseType = {
 export type MyItemsResponseType = {
     data: { 
         myItems: ItemInResponseType[]
+    }
+}
+
+
+export type AddPostResponseType = {
+    data: { 
+        addPost: {
+            code: string,
+            success: boolean,
+            message: string,
+            chat: ChatType
+        }
     }
 }
 

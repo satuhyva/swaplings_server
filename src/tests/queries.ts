@@ -80,13 +80,13 @@ export const removePersonQuery = (): string => {
 }
 
 export const addItemQuery = (
-    title: string, priceGroup: PriceGroupEnum, description: string, brand?: string, image_public_id?: string, image_secure_url?: string
+    title: string, priceGroup: PriceGroupEnum, description: string, brand?: string, imagePublicId?: string, imageSecureUrl?: string
     ): string => {
 
     let parameters = `title: "${title}", priceGroup: "${priceGroup}", description: "${description}"` 
     if (brand) parameters += `, brand: "${brand}"`  
-    if (image_public_id) parameters += `, image_public_id: "${image_public_id}"`  
-    if (image_secure_url) parameters += `, image_secure_url: "${image_secure_url}"`  
+    if (imagePublicId) parameters += `, imagePublicId: "${imagePublicId}"`  
+    if (imageSecureUrl) parameters += `, imageSecureUrl: "${imageSecureUrl}"`  
 
     return `
         mutation {
@@ -104,8 +104,8 @@ export const addItemQuery = (
                     priceGroup
                     description
                     brand
-                    image_public_id
-                    image_secure_url
+                    imagePublicId
+                    imageSecureUrl
                     owner {
                         id
                     }
@@ -130,8 +130,8 @@ export const myItemsQuery = (): string => {
                     priceGroup
                     description
                     brand
-                    image_public_id
-                    image_secure_url
+                    imagePublicId
+                    imageSecureUrl
                     owner {
                         id
                     }
@@ -141,6 +141,40 @@ export const myItemsQuery = (): string => {
                     matchedFrom {
                         id
                     }
+            }
+        }
+    `
+}
+
+
+export const addPostQuery = (
+    itemIdA: string, itemIdB: string, post: string
+    ): string => {
+
+    const parameters = `itemIdA: "${itemIdA}", itemIdB: "${itemIdB}", post: "${post}"`  
+
+    return `
+        mutation {
+            addPost(
+                addPostInput: {
+                    ${parameters}
+                }
+            ) {  
+                code,
+                success,
+                message,
+                chat {
+                    id
+                    itemIdA
+                    personIdA
+                    itemIdB
+                    personIdB  
+                    posts {
+                        post
+                        postingItemId
+                        createdAt
+                    }                    
+                }  
             }
         }
     `

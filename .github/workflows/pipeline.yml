@@ -10,6 +10,11 @@ on:
 jobs:
   simple_deployment:
     runs-on: ubuntu-18.04
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 21017:27017
     # services:
     #   postgres:
     #     image: postgres
