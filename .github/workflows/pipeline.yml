@@ -13,9 +13,6 @@ jobs:
     services:
       mongodb:
         image: mongo:latest
-        env:
-          MONGO_DB_URL: mongodb://localhost:27017
-          MONGO_DB_TEST_URL: mongodb://localhost:27017
         ports:
           - 21017:27017
     # services:
@@ -45,7 +42,7 @@ jobs:
       # - name: setup database tables
       #   run: node build/src/database/createDatabase.js
       - name: run the tests
-        run: npm run test
+        run: npm run githubactiontests
       - uses: akhileshns/heroku-deploy@v3.8.9
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}

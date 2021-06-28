@@ -9,6 +9,7 @@
     "start": "node build/index.js",
     "eslint": "eslint --ext .ts .",
     "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
+    "githubactiontests": "cross-env NODE_ENV=githubaction jest --verbose --runInBand",
     "e2e": "E2E=e2e ts-node-dev index.ts"
   },
   "author": "Satu Hyvärinen",
