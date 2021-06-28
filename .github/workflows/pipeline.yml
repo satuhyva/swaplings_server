@@ -13,6 +13,8 @@ jobs:
     services:
       mongodb:
         image: mongo:latest
+        env:
+          MONGO_DB_TEST_URL: mongodb://localhost:27017
         ports:
           - 21017:27017
     # services:
