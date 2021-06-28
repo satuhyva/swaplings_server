@@ -1,4 +1,4 @@
-# https://spin.atomicobject.com/2020/01/20/github-actions-react-node/
+
 
 name: Deployment pipeline
 
@@ -8,43 +8,23 @@ on:
       - master
 
 jobs:
-  simple_deployment:
+  deployment:
     runs-on: ubuntu-18.04
-    # services:
-    #   mongodb:
-    #     image: mongo:latest
-    #     ports:
-    #       - 21017:27017
-    # services:
-    #   postgres:
-    #     image: postgres
-    #     env:
-    #       POSTGRES_USER: postgres
-    #       POSTGRES_PASSWORD: postgres
-    #     options: >-
-    #       --health-cmd pg_isready
-    #       --health-interval 10s
-    #       --health-timeout 5s
-    #       --health-retries 5
-    #     ports:
-    #       - 5432:5432
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: '12.x'
-      - name: Start MongoDB
+      - name: start MongoDB
         uses: supercharge/mongodb-github-action@1.6.0
         with: 
           mongodb-version: '4.0'
       - name: perform npm installations
         run: npm install
+      - name: perform build
+        run: npm run tsc
       - name: lint the code
         run: npm run eslint
-      - name: perform build for tests
-        run: npm run tsc
-      # - name: setup database tables
-      #   run: node build/src/database/createDatabase.js
       - name: run the tests
         env:
           JWT_SECRET: ${{secrets.JWT_SECRET}}
