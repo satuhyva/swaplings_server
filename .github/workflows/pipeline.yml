@@ -46,6 +46,8 @@ jobs:
       # - name: setup database tables
       #   run: node build/src/database/createDatabase.js
       - name: run the tests
+        env:
+          JWT_SECRET: ${{secrets.JWT_SECRET}}
         run: npm run githubactiontests
       - uses: akhileshns/heroku-deploy@v3.8.9
         with:
