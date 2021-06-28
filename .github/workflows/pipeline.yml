@@ -36,7 +36,7 @@ jobs:
       - name: Start MongoDB
         uses: supercharge/mongodb-github-action@1.6.0
         with: 
-          mongodb-version: '4.x'
+          mongodb-version: '4.0'
       - name: perform npm installations
         run: npm install
       - name: lint the code
