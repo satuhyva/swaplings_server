@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.REMOVE_PERSON_UNAUTHORIZED = exports.REMOVE_PERSON_DATABASE_ERROR = exports.REMOVE_PERSON_SUCCESS = exports.SIGNUP_SUCCESS = exports.SIGNUP_ERROR_DATABASE = exports.SIGNUP_USERNAME_ALREADY_IN_USE = exports.SIGNUP_EMAIL_ALREADY_IN_USE = exports.LOGIN_FACEBOOK_SUCCESS = exports.LOGIN_FACEBOOK_DATABASE_ERROR = exports.LOGIN_FACEBOOK_GRAPH_API_ERROR = exports.LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS = exports.LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD = void 0;
+exports.LOGIN_FAILED_INVALID_USERNAME_AND_OR_PASSWORD = 'Login failed. Username or password or both are invalid.';
+exports.LOGIN_WITH_USERNAME_AND_PASSWORD_SUCCESS = 'Successfully performed login person with username and password.';
+exports.LOGIN_FACEBOOK_GRAPH_API_ERROR = 'Person trying to log in could not be found in Facebook Graph API.';
+exports.LOGIN_FACEBOOK_DATABASE_ERROR = 'Error in adding person to database or finding person in database.';
+exports.LOGIN_FACEBOOK_SUCCESS = 'Successfully performed login with Facebook.';
+exports.SIGNUP_EMAIL_ALREADY_IN_USE = 'Email already in use. Duplicate emails are not allowed. Cannot create another person with this email.';
+exports.SIGNUP_USERNAME_ALREADY_IN_USE = 'Username already in use. Duplicate usernames are not allowed.';
+exports.SIGNUP_ERROR_DATABASE = 'Error adding person to database.';
+exports.SIGNUP_SUCCESS = 'Successfully performed sign up person.';
+exports.REMOVE_PERSON_SUCCESS = 'Succesfully removed person from database.';
+exports.REMOVE_PERSON_DATABASE_ERROR = 'Error in removing person from database.';
+exports.REMOVE_PERSON_UNAUTHORIZED = 'Not authorised to remove person.';

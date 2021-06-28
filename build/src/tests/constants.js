@@ -1,0 +1,23 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.POST = exports.IMAGE_SECURE_URL = exports.IMAGE_PUBLIC_ID = exports.BRAND = exports.DESCRIPTION = exports.PRICE_GROUP = exports.TITLE = exports.FACEBOOK_ACCESS_TOKEN = exports.FACEBOOK_NAME = exports.FACEBOOK_ID = exports.PASSWORDHASH = exports.EMAIL = exports.PASSWORD = exports.USERNAME = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const PriceGroupEnum_1 = require("../types/price-group/PriceGroupEnum");
+exports.USERNAME = 'Shallan Davar';
+exports.PASSWORD = 'secretsecret';
+exports.EMAIL = 'shallan.davar@gmail.com';
+const salt = bcryptjs_1.default.genSaltSync(10);
+exports.PASSWORDHASH = bcryptjs_1.default.hashSync(exports.PASSWORD, salt);
+exports.FACEBOOK_ID = 'some Facebook id';
+exports.FACEBOOK_NAME = 'some Facebook name';
+exports.FACEBOOK_ACCESS_TOKEN = 'some Facebook access token';
+exports.TITLE = 'Some item title';
+exports.PRICE_GROUP = PriceGroupEnum_1.PriceGroupEnum.GROUP_2;
+exports.DESCRIPTION = 'Some item description';
+exports.BRAND = 'Some item brand';
+exports.IMAGE_PUBLIC_ID = 'Some image public ID';
+exports.IMAGE_SECURE_URL = 'Some image url';
+exports.POST = 'Some Post!';
